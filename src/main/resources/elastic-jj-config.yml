@@ -1,0 +1,10 @@
+elasticsearch:
+  hosts:
+    - "172.20.35.239:9200"  # elasticsearch-cs
+    - "172.20.213.0:9200"   # elasticsearch-data1-cs
+    - "172.20.158.168:9200"   # elasticsearch-data2-cs
+    - "a997f27ccab3e42b389e52bbe96dbee8-274686218.us-east-1.elb.amazonaws.com:9200"  # elasticsearch-lb
+  connectionTimeout: 1000      # 밀리초 단위 (1초)
+  socketTimeout: 30000         # 밀리초 단위 (30초)
+  maxConnTotal: 100            # 클라이언트가 생성할 수 있는 전체 연결 수
+  maxConnPerRoute: 10          # 각 호스트 당 최대 연결 수
