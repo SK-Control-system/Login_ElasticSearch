@@ -28,22 +28,44 @@ public interface ElasticExecutor {
      * @param queryJson 검색 쿼리 JSON 문자열
      * @return 쿼리 데이터 사이즈 만큼
      */
-    static <E> E search(RestClient client, String index, HttpMethodEnum method, String queryJson, Class<E> clazz) {
+//    static <E> E search(RestClient client, String index, HttpMethodEnum method, String queryJson, Class<E> clazz) {
+//        try {
+//            Request request = new Request(method.getMethod(), "/" + index + "/_search");
+//            request.addParameter("pretty", "true");
+//            request.setJsonEntity(queryJson);
+//
+//            // 요청 실행
+//            Response response = client.performRequest(request);
+//            String responseBody = EntityUtils.toString(response.getEntity());
+//
+//            return  parseSingleResult(responseBody, clazz);
+//        }catch (Exception e){
+//            System.out.println("ES ERROR : " + e.getMessage());
+//            return null;
+//        }
+//    }
+    public static <E> E search(RestClient client, String path, HttpMethodEnum method, String queryJson, Class<E> clazz) {
         try {
-            Request request = new Request(method.getMethod(), "/" + index + "/_search");
+            // GET 요청 경로 설정
+            Request request = new Request(method.getMethod(), path);
             request.addParameter("pretty", "true");
-            request.setJsonEntity(queryJson);
+
+            // GET 요청일 경우 JSON 본문 없이 설정
+            if (queryJson != null && !method.equals(HttpMethodEnum.GET)) {
+                request.setJsonEntity(queryJson);
+            }
 
             // 요청 실행
             Response response = client.performRequest(request);
             String responseBody = EntityUtils.toString(response.getEntity());
 
-            return  parseSingleResult(responseBody, clazz);
-        }catch (Exception e){
+            return parseSingleResult(responseBody, clazz);
+        } catch (Exception e) {
             System.out.println("ES ERROR : " + e.getMessage());
             return null;
         }
     }
+
 
     /**
      * Elasticsearch에서 전체 데이터를 페이지 단위로 조회합니다.
@@ -53,25 +75,55 @@ public interface ElasticExecutor {
      * @param queryJson 검색 쿼리 JSON 문자열
      * @return 쿼리 데이터 사이즈 만큼
      */
-    static <E> List<E> searchList(RestClient client, String index, HttpMethodEnum method, String queryJson, Class<E> clazz) {
-        List<E> results = new ArrayList<>();
+//    static <E> List<E> searchList(RestClient client, String index, HttpMethodEnum method, String queryJson, Class<E> clazz) {
+//        List<E> results = new ArrayList<>();
+//        try {
+//                Request request = new Request(method.getMethod(), "/" + index + "/_search");
+//                request.addParameter("pretty", "true");
+//                request.setJsonEntity(queryJson);
+//
+//                // 요청 실행
+//                Response response = client.performRequest(request);
+//                String responseBody = EntityUtils.toString(response.getEntity());
+//
+//                // 응답에서 검색 결과 추가
+//                List<E> pageResults = parseResults(responseBody, clazz);
+//                results.addAll(pageResults);
+//
+//        }catch (Exception e){
+//            System.out.println("ES ERROR : " + e.getMessage());
+//        }
+//        return (List<E>) results;
+//    }
+    public static <E> List<E> searchList(RestClient client, String path, HttpMethodEnum method, String queryJson, Class<E> clazz) {
         try {
-                Request request = new Request(method.getMethod(), "/" + index + "/_search");
-                request.addParameter("pretty", "true");
+            Request request = new Request(method.getMethod(), path);
+            request.addParameter("pretty", "true");
+            if (queryJson != null) {
                 request.setJsonEntity(queryJson);
+            }
 
-                // 요청 실행
-                Response response = client.performRequest(request);
-                String responseBody = EntityUtils.toString(response.getEntity());
+            Response response = client.performRequest(request);
+            String responseBody = EntityUtils.toString(response.getEntity());
 
-                // 응답에서 검색 결과 추가
-                List<E> pageResults = parseResults(responseBody, clazz);
-                results.addAll(pageResults);
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(responseBody);
+            JsonNode hitsNode = rootNode.path("hits").path("hits");
 
-        }catch (Exception e){
+            List<E> results = new ArrayList<>();
+            for (JsonNode hit : hitsNode) {
+                JsonNode sourceNode = hit.path("_source");
+                if (!sourceNode.isMissingNode()) {
+                    E result = objectMapper.treeToValue(sourceNode, clazz);
+                    results.add(result);
+                }
+            }
+            return results;
+
+        } catch (Exception e) {
             System.out.println("ES ERROR : " + e.getMessage());
+            return new ArrayList<>();
         }
-        return (List<E>) results;
     }
 
     /**
