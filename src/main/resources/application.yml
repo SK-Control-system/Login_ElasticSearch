@@ -1,0 +1,20 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 495145377013-l6tlfrkjt7m5n041bfqthuc3b36ujm6d.apps.googleusercontent.com
+            client-secret: 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
+            scope:
+              - email
+              - profile
+              - https://www.googleapis.com/auth/youtube.readonly
+              - https://www.googleapis.com/auth/youtube
+              - https://www.googleapis.com/auth/youtube.force-ssl
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
