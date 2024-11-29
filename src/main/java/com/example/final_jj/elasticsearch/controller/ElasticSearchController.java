@@ -55,6 +55,39 @@ public class ElasticSearchController {
         return values;
     }
 
+    public List<String> findValues(String keyPath, List<Object> searchList) {
+        List<String> values = new ArrayList<>();
+        try {
+            // ObjectMapper를 사용하여 List를 JSON 문자열로 변환
+            ObjectMapper objectMapper = new ObjectMapper();
+            String searchList2Json = objectMapper.writeValueAsString(searchList); // List를 JSON 문자열로 변환
+
+            // JSON 문자열을 JsonNode로 변환
+            JsonNode rootNode = objectMapper.readTree(searchList2Json); // JSON 문자열 파싱
+
+            // 점(.)으로 구분된 경로를 처리
+            String[] keys = keyPath.split("\\."); // 키를 "." 기준으로 분리
+
+            // JSON 배열을 순회하며 지정된 key 값 추출
+            for (JsonNode node : rootNode) {
+                JsonNode currentNode = node;
+                for (String key : keys) {
+                    currentNode = currentNode.path(key); // 계층적으로 탐색
+                    if (currentNode.isMissingNode()) {
+                        break; // 중간에 없는 키가 발견되면 종료
+                    }
+                }
+                if (!currentNode.isMissingNode()) {
+                    values.add(currentNode.asText());
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error while extracting key: " + keyPath + " - " + e.getMessage());
+        }
+        return values;
+    }
+
     /**
      * Elasticsearch에서 쿼리 기반으로 데이터를 검색합니다.
      *
@@ -95,7 +128,7 @@ public class ElasticSearchController {
         String path = "/" + index + "/_search";
         List searchList = ElasticExecutor.searchList(restClient, path, HttpMethodEnum.POST, queryJson, Object.class);
 
-        List<String> sentimentLabels = new ArrayList<String>();
+//        List<String> sentimentLabels = new ArrayList<String>();
 //        try {
 //            // ObjectMapper를 사용하여 각 Object에서 sentiment.label 추출
 //            ObjectMapper objectMapper = new ObjectMapper();
