@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class KafkaConsumer {
-    @KafkaListener(topics = "categoryLiveList", groupId = "dev")
+    @KafkaListener(topics = "categoryLiveList", groupId = "LiveControlPod")
     public void consume(String message) {
         log.info("수신: {}", message);
     }
