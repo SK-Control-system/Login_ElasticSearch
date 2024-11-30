@@ -6,9 +6,12 @@ import com.example.final_jj.elasticsearch.utils.common.ElasticExecutor;
 import com.example.final_jj.postgreSQL.entity.VideoEntity;
 import com.example.final_jj.postgreSQL.repository.PostgreSQLRepository;
 import org.elasticsearch.client.RestClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +22,8 @@ public class ElasticSearchController {
 
     @Autowired
     private PostgreSQLRepository repository;
+
+    private static final Logger logger = LoggerFactory.getLogger(ElasticSearchController.class);
 
     private final RestClient restClient;
 
@@ -79,7 +84,39 @@ public class ElasticSearchController {
         return searchResults;
     }
 
-    // videoId에 해당되는 emotion.label 데이터 추출
+    // 수정됨: searchSourceDocuments로 검색 수행
+    public List<Map<String, Object>> searchSourceDocuments(@RequestParam String index, @RequestBody String queryJson) {
+        String path = "/" + index + "/_search";
+
+        try {
+            // Elasticsearch 요청 실행
+            Map<String, Object> esResponse = ElasticExecutor.searchWordCloud(restClient, path, HttpMethodEnum.POST, queryJson);
+            if (esResponse == null || !esResponse.containsKey("hits")) {
+                logger.warn("Elasticsearch 응답에 hits 데이터가 없습니다.");
+                return new ArrayList<>();
+            }
+
+            // hits에서 _source 데이터 추출
+            List<Map<String, Object>> results = new ArrayList<>();
+            Map<String, Object> hits = (Map<String, Object>) esResponse.get("hits");
+            List<Map<String, Object>> hitList = (List<Map<String, Object>>) hits.get("hits");
+
+            for (Map<String, Object> hit : hitList) {
+                if (hit.containsKey("_source")) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> source = (Map<String, Object>) hit.get("_source");
+                    results.add(source);
+                }
+            }
+
+            return results;
+        } catch (Exception e) {
+            logger.error("Elasticsearch searchSourceDocuments 요청 실패: ", e);
+            return new ArrayList<>();
+        }
+    }
+
+
     @PostMapping("/chatting/search/emotion")
     public List<String> searchEmotion(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
         VideoEntity videoEntity = repository.findByVideoid(videoid);
@@ -87,7 +124,7 @@ public class ElasticSearchController {
             throw new RuntimeException("videoid 검색 실패 : " + videoid);
         }
         String videoId = videoEntity.getVideoid();
-        
+
         List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
 
         // videoId로 필터링
@@ -97,7 +134,6 @@ public class ElasticSearchController {
         return findValue("chattingAnalysisResult.emotion.label", filteredResults);
     }
 
-    // videoId에 해당되는 sentiment.label 데이터 추출
     @PostMapping("/chatting/search/sentiment")
     public List<String> searchSentiment(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
         VideoEntity videoEntity = repository.findByVideoid(videoid);
@@ -111,11 +147,10 @@ public class ElasticSearchController {
         // videoId로 필터링
         List<Map<String, Object>> filteredResults = checkVideoId(videoId, searchList);
 
-        // sentiment.label추출
+        // sentiment.label 추출
         return findValue("chattingAnalysisResult.sentiment.label", filteredResults);
     }
 
-    // videoId로 시청자수 추출
     @PostMapping("/video/search/concurrentViewers")
     public List<String> searchConcurrentViewers(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
         VideoEntity videoEntity = repository.findByVideoid(videoid);
@@ -133,7 +168,6 @@ public class ElasticSearchController {
         return findValue("videoData.concurrentViewers", filteredResults);
     }
 
-    // videoId로 좋아요수 추출
     @PostMapping("/video/search/likeCount")
     public List<String> searchLikeCount(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
         VideoEntity videoEntity = repository.findByVideoid(videoid);
@@ -148,25 +182,74 @@ public class ElasticSearchController {
         List<Map<String, Object>> filteredResults = checkVideoId(videoId, searchList);
 
         // 좋아요수 추출
-        return findValue("videoData.ikeCount", filteredResults); //추후에 videoData.likeCount로 변경하기
-
+        return findValue("videoData.likeCount", filteredResults); // 수정된 필드 이름 반영
     }
 
-    // 워드클라우드 데이터 추출
     @PostMapping("/chatting/wordCloud")
-    public List<String> getWordCloud(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
-        VideoEntity videoEntity = repository.findByVideoid(videoid);
-        if (videoEntity == null) {
-            throw new RuntimeException("videoid 검색 실패 : " + videoid);
+    public List<Map<String, Object>> getWordCloud(
+            @RequestParam String index,
+            @RequestBody String queryJson,
+            @RequestParam String videoid) {
+
+//        VideoEntity videoEntity = repository.findByVideoid(videoid);
+//        if (videoEntity == null) {
+//            throw new RuntimeException("videoid 검색 실패 : " + videoid);
+//        }
+//        String videoId = videoEntity.getVideoid();
+
+        // searchSourceDocuments용 쿼리 하드코딩
+        String searchSourceQuery = "{"
+                + "  \"query\": {"
+                + "    \"term\": {"
+                + "      \"videoId\": \"" + videoid + "\""
+                + "    }"
+                + "  }"
+                + "}";
+
+        // 수정: searchSourceDocuments 호출
+        List<Map<String, Object>> searchList = searchSourceDocuments(index, searchSourceQuery);
+        logger.info("Search Documents Results: {}", searchList);
+
+        // videoId로 데이터 필터링
+        List<Map<String, Object>> filteredResults = checkVideoId(videoid, searchList);
+        logger.info("Filtered Results for videoId {}: {}", videoid, filteredResults);
+
+        // 메시지 필드 추출
+        List<String> messages = findValue("message", filteredResults);
+        logger.info("Extracted Messages: {}", messages);
+
+        // Aggregation 결과 처리
+        String path = "/" + index + "/_search";
+        Map<String, Object> esResponse = ElasticExecutor.searchWordCloud(restClient, path, HttpMethodEnum.POST, queryJson);
+
+        if (esResponse == null || !esResponse.containsKey("aggregations")) {
+            throw new RuntimeException("Elasticsearch 응답에 aggregation 데이터가 없습니다.");
         }
-        String videoId = videoEntity.getVideoid();
 
-        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
+        Map<String, Object> aggregations = (Map<String, Object>) esResponse.get("aggregations");
+        Map<String, Object> topKeywords = (Map<String, Object>) aggregations.get("top_keywords");
 
-        // videoId로 필터링
-        List<Map<String, Object>> filteredResults = checkVideoId(videoId, searchList);
+        if (topKeywords == null || !topKeywords.containsKey("buckets")) {
+            throw new RuntimeException("Elasticsearch 응답에 buckets 데이터가 없습니다.");
+        }
 
-        //워드클라우드 데이터 추출
-        return findValue("message", filteredResults);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> buckets = (List<Map<String, Object>>) topKeywords.get("buckets");
+        logger.info("Buckets: {}", buckets);
+
+//        // messages 리스트에 있는 키워드만 buckets에서 필터링
+//        List<Map<String, Object>> filteredBuckets = new ArrayList<>();
+//        for (Map<String, Object> bucket : buckets) {
+//            String key = (String) bucket.get("key");
+//            logger.info("Checking bucket key: {}", key);
+//            if (messages.contains(key)) {
+//                filteredBuckets.add(bucket);
+//                logger.info("Added to filteredBuckets: {}", bucket);
+//            }
+//        }
+//
+//        logger.info("Filtered Buckets: {}", filteredBuckets);
+
+        return buckets;
     }
 }

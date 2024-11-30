@@ -15,6 +15,7 @@ import org.apache.http.util.EntityUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public interface ElasticExecutor {
      static final ObjectMapper objectMapper = new ObjectMapper()
@@ -65,6 +66,66 @@ public interface ElasticExecutor {
             return null;
         }
     }
+
+//    public static Map<String, Object> searchWordCloud(RestClient client, String path, HttpMethodEnum method, String queryJson) {
+//        try {
+//            Request request = new Request(method.getMethod(), path);
+//            request.addParameter("pretty", "true");
+//            if (queryJson != null) {
+//                request.setJsonEntity(queryJson);
+//            }
+//
+//            Response response = client.performRequest(request);
+//            String responseBody = EntityUtils.toString(response.getEntity());
+//
+//            // 응답 데이터를 Map으로 변환
+//            ObjectMapper objectMapper = new ObjectMapper();
+//            return objectMapper.readValue(responseBody, Map.class);
+//
+//        } catch (Exception e) {
+//            System.err.println("ES ERROR: " + e.getMessage());
+//            e.printStackTrace();
+//            return null;
+//        }
+//    }
+public static Map<String, Object> searchWordCloud(RestClient client, String path, HttpMethodEnum method, String queryJson) {
+    try {
+        // Elasticsearch 요청 생성
+        Request request = new Request(method.getMethod(), path);
+        request.addParameter("pretty", "true");
+        if (queryJson != null) {
+            request.setJsonEntity(queryJson);
+        }
+
+        // Elasticsearch 응답 실행
+        Response response = client.performRequest(request);
+        String responseBody = EntityUtils.toString(response.getEntity());
+
+        // 응답 로그 (디버깅용)
+        System.out.println("ES Response: " + responseBody);
+
+        // 응답 데이터를 Map으로 변환
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> responseMap = objectMapper.readValue(responseBody, Map.class);
+
+        if (responseMap == null || responseMap.isEmpty()) {
+            System.err.println("Elasticsearch 응답이 비어 있습니다.");
+            return null;
+        }
+
+        return responseMap;
+
+    } catch (IOException e) {
+        System.err.println("Elasticsearch 요청 또는 응답 처리 중 오류 발생: " + e.getMessage());
+        e.printStackTrace();
+        return null;
+    } catch (Exception e) {
+        System.err.println("예기치 못한 오류 발생: " + e.getMessage());
+        e.printStackTrace();
+        return null;
+    }
+}
+
 
 
     /**
