@@ -1,6 +1,7 @@
 package com.example.final_jj.kafka.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -14,11 +15,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
+@Slf4j
 @RequiredArgsConstructor
 public class KafkaConfig {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
-
 
     // ProducerConfig 와 producerFactory 를 굳이 따로 구현하지않고 바로 리턴하게 해놨음 그래서 반환값은 <스트링, 스트링>
     @Bean
