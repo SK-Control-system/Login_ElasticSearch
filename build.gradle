@@ -38,6 +38,11 @@ dependencies {
     implementation 'org.yaml:snakeyaml:2.2'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.data:spring-data-elasticsearch:4.0.0'  // Elasticsearch 7.x와 호환
+    implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:7.10.0'  // Elasticsearch 7.10.0
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
 
 }
 

@@ -1,20 +1,24 @@
 package com.example.final_jj.elasticsearch.controller;
 
-import com.example.final_jj.elasticsearch.entity.MyDocument;
 import com.example.final_jj.elasticsearch.enums.HttpMethodEnum;
 import com.example.final_jj.elasticsearch.factor.ElasticSearchClientFactory;
 import com.example.final_jj.elasticsearch.utils.common.ElasticExecutor;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.final_jj.postgreSQL.entity.VideoEntity;
+import com.example.final_jj.postgreSQL.repository.PostgreSQLRepository;
 import org.elasticsearch.client.RestClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/es")
 public class ElasticSearchController {
+
+    @Autowired
+    private PostgreSQLRepository repository;
 
     private final RestClient restClient;
 
@@ -22,136 +26,129 @@ public class ElasticSearchController {
         this.restClient = new ElasticSearchClientFactory(pathInfo).getEsClient();
     }
 
-    public List<String> findValue(String keyPath, List<Object> searchList) {
+    // checkVideoId를 기준으로 필터링
+    public List<Map<String, Object>> checkVideoId(String videoId, List<Map<String, Object>> searchList) {
+        List<Map<String, Object>> filteredResults = new ArrayList<>();
+        for (Map<String, Object> record : searchList) {
+            String recordVideoId = (String) record.get("videoId");
+            if (videoId.equals(recordVideoId)) {
+                filteredResults.add(record);
+            }
+        }
+        return filteredResults;
+    }
+
+    // keyPath를 기반으로 데이터 추출
+    public List<String> findValue(String keyPath, List<Map<String, Object>> filteredResults) {
         List<String> values = new ArrayList<>();
-        try {
-            // ObjectMapper를 사용하여 List를 JSON 문자열로 변환
-            ObjectMapper objectMapper = new ObjectMapper();
-            String searchList2Json = objectMapper.writeValueAsString(searchList); // List를 JSON 문자열로 변환
-
-            // JSON 문자열을 JsonNode로 변환
-            JsonNode rootNode = objectMapper.readTree(searchList2Json); // JSON 문자열 파싱
-
-            // 점(.)으로 구분된 경로를 처리
-            String[] keys = keyPath.split("\\."); // 키를 "." 기준으로 분리
-
-            // JSON 배열을 순회하며 지정된 key 값 추출
-            for (JsonNode node : rootNode) {
-                JsonNode currentNode = node;
-                for (String key : keys) {
-                    currentNode = currentNode.path(key); // 계층적으로 탐색
-                    if (currentNode.isMissingNode()) {
-                        break; // 중간에 없는 키가 발견되면 종료
-                    }
-                }
-                if (!currentNode.isMissingNode()) {
-                    values.add(currentNode.asText());
+        String[] keys = keyPath.split("\\.");
+        for (Map<String, Object> record : filteredResults) {
+            Object currentValue = record;
+            for (String key : keys) {
+                if (currentValue instanceof Map) {
+                    currentValue = ((Map<?, ?>) currentValue).get(key);
+                } else {
+                    currentValue = null;
+                    break;
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error while extracting key: " + keyPath + " - " + e.getMessage());
+            if (currentValue != null) {
+                values.add(currentValue.toString());
+            }
         }
         return values;
     }
 
-    public List<String> findValues(String keyPath, List<Object> searchList) {
-        List<String> values = new ArrayList<>();
-        try {
-            // ObjectMapper를 사용하여 List를 JSON 문자열로 변환
-            ObjectMapper objectMapper = new ObjectMapper();
-            String searchList2Json = objectMapper.writeValueAsString(searchList); // List를 JSON 문자열로 변환
-
-            // JSON 문자열을 JsonNode로 변환
-            JsonNode rootNode = objectMapper.readTree(searchList2Json); // JSON 문자열 파싱
-
-            // 점(.)으로 구분된 경로를 처리
-            String[] keys = keyPath.split("\\."); // 키를 "." 기준으로 분리
-
-            // JSON 배열을 순회하며 지정된 key 값 추출
-            for (JsonNode node : rootNode) {
-                JsonNode currentNode = node;
-                for (String key : keys) {
-                    currentNode = currentNode.path(key); // 계층적으로 탐색
-                    if (currentNode.isMissingNode()) {
-                        break; // 중간에 없는 키가 발견되면 종료
-                    }
-                }
-                if (!currentNode.isMissingNode()) {
-                    values.add(currentNode.asText());
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Error while extracting key: " + keyPath + " - " + e.getMessage());
-        }
-        return values;
-    }
-
-    /**
-     * Elasticsearch에서 쿼리 기반으로 데이터를 검색합니다.
-     *
-     * @param index     검색할 인덱스 이름
-     * @param queryJson 검색 조건(JSON 형식)
-     * @return 검색된 데이터 리스트
-     */
     @PostMapping("/searchList")
-    public List<Object> searchDocuments(@RequestParam String index, @RequestBody String queryJson) {
+    public List<Map<String, Object>> searchDocuments(@RequestParam String index, @RequestBody String queryJson) {
         String path = "/" + index + "/_search";
-        return ElasticExecutor.searchList(restClient, path, HttpMethodEnum.POST, queryJson, Object.class);
+
+        List<?> rawResults = ElasticExecutor.searchList(restClient, path, HttpMethodEnum.POST, queryJson, Map.class);
+        List<Map<String, Object>> searchResults = new ArrayList<>();
+
+        for (Object result : rawResults) {
+            if (result instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> safeResult = (Map<String, Object>) result;
+                searchResults.add(safeResult);
+            } else {
+                throw new RuntimeException("Unexpected data format in search results: " + result.getClass().getName());
+            }
+        }
+
+        return searchResults;
     }
 
+    // videoId에 해당되는 emotion.label 데이터 추출
     @PostMapping("/chatting/search/emotion")
-    public List<String> searchEmotion(@RequestParam String index, @RequestBody String queryJson) {
-        String path = "/" + index + "/_search";
-        List searchList = ElasticExecutor.searchList(restClient, path, HttpMethodEnum.POST, queryJson, Object.class);
+    public List<String> searchEmotion(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
+        VideoEntity videoEntity = repository.findByVideoid(videoid);
+        if (videoEntity == null) {
+            throw new RuntimeException("videoid 검색 실패 : " + videoid);
+        }
+        String videoId = videoEntity.getVideoid();
+        
+        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
 
-//        List<String> emotionLabels = new ArrayList<String>();
-//        try {
-//            // ObjectMapper를 사용하여 각 Object에서 emotion.label 추출
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            for (Object obj : searchList) {
-//                // Object를 JsonNode로 변환
-//                JsonNode rootNode = objectMapper.valueToTree(obj);
-//
-//                // emotion.label 값 추출
-//                JsonNode emotionLabelNode = rootNode.path("chattingAnalysisResult").path("emotion").path("label");
-//                if (!emotionLabelNode.isMissingNode()) {
-//                    emotionLabels.add(emotionLabelNode.asText());
-//                }
-//            }
-        return findValue("chattingAnalysisResult.emotion.label", searchList);
+        // videoId로 필터링
+        List<Map<String, Object>> filteredResults = checkVideoId(videoId, searchList);
+
+        // emotion.label 추출
+        return findValue("chattingAnalysisResult.emotion.label", filteredResults);
     }
 
+    // videoId에 해당되는 sentiment.label 데이터 추출
     @PostMapping("/chatting/search/sentiment")
-    public List<String> searchSentiment(@RequestParam String index, @RequestBody String queryJson) {
-        String path = "/" + index + "/_search";
-        List searchList = ElasticExecutor.searchList(restClient, path, HttpMethodEnum.POST, queryJson, Object.class);
+    public List<String> searchSentiment(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
+        VideoEntity videoEntity = repository.findByVideoid(videoid);
+        if (videoEntity == null) {
+            throw new RuntimeException("videoid 검색 실패 : " + videoid);
+        }
+        String videoId = videoEntity.getVideoid();
 
-//        List<String> sentimentLabels = new ArrayList<String>();
-//        try {
-//            // ObjectMapper를 사용하여 각 Object에서 sentiment.label 추출
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            for (Object obj : searchList) {
-//                // Object를 JsonNode로 변환
-//                JsonNode rootNode = objectMapper.valueToTree(obj);
-//
-//                // sentiment.label 값 추출
-//                JsonNode sentimentLabelNode = rootNode.path("chattingAnalysisResult").path("sentiment").path("label");
-//                if (!sentimentLabelNode.isMissingNode()) {
-//                    sentimentLabels.add(sentimentLabelNode.asText());
-//                }
-//            }
-//        }
-        return findValue("chattingAnalysisResult.sentiment.label", searchList);
+        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
+
+        // videoId로 필터링
+        List<Map<String, Object>> filteredResults = checkVideoId(videoId, searchList);
+
+        // sentiment.label추출
+        return findValue("chattingAnalysisResult.sentiment.label", filteredResults);
     }
 
-    @PostMapping("/vedio/search/concurrentViewers")
-    public List<String> searchConcurrentViewers(@RequestParam String index, @RequestBody String queryJson) {
-        String path = "/" + index + "/_search";
-        List searchList = ElasticExecutor.searchList(restClient, path, HttpMethodEnum.POST, queryJson, Object.class);
+    // videoId로 시청자수 추출
+    @PostMapping("/video/search/concurrentViewers")
+    public List<String> searchConcurrentViewers(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
+        VideoEntity videoEntity = repository.findByVideoid(videoid);
+        if (videoEntity == null) {
+            throw new RuntimeException("videoid 검색 실패 : " + videoid);
+        }
+        String videoId = videoEntity.getVideoid();
 
-        return findValue("videoData.concurrentViewers", searchList);
+        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
+
+        // videoId로 필터링
+        List<Map<String, Object>> filteredResults = checkVideoId(videoId, searchList);
+
+        // 시청자수 추출
+        return findValue("videoData.concurrentViewers", filteredResults);
     }
 
+    // videoId로 좋아요수 추출
+    @PostMapping("/video/search/likeCount")
+    public List<String> searchLikeCount(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
+        VideoEntity videoEntity = repository.findByVideoid(videoid);
+        if (videoEntity == null) {
+            throw new RuntimeException("videoid 검색 실패 : " + videoid);
+        }
+        String videoId = videoEntity.getVideoid();
+
+        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
+
+        // videoId로 필터링
+        List<Map<String, Object>> filteredResults = checkVideoId(videoId, searchList);
+
+        // 좋아요수 추출
+        return findValue("videoData.ikeCount", filteredResults); //추후에 videoData.likeCount로 변경하기
+
+    }
 }

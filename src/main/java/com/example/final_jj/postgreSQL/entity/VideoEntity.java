@@ -1,9 +1,10 @@
-package com.example.final_jj.redis.entity;
+package com.example.final_jj.postgreSQL.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.Getter;
 
 @Entity
 @Data
@@ -12,5 +13,9 @@ public class VideoEntity {
 
     @Id
     private String videoid;
+
+    public String getVideoid() {
+        return videoid;
+    }
 
 }
