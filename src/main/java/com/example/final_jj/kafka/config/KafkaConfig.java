@@ -31,6 +31,7 @@ public class KafkaConfig {
 
         return new DefaultKafkaProducerFactory<>(config);
     }
+
     @Bean
     public ConsumerFactory<String, String> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
