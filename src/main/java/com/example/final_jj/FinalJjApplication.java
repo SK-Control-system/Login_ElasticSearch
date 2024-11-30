@@ -5,7 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @SpringBootApplication
-@EnableConfigurationProperties(com.example.final_jj.elasticsearch.factor.ElasticsearchConfig.class)
 public class FinalJjApplication {
 
     public static void main(String[] args) {

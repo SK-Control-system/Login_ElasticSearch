@@ -151,4 +151,22 @@ public class ElasticSearchController {
         return findValue("videoData.ikeCount", filteredResults); //추후에 videoData.likeCount로 변경하기
 
     }
+
+    // 워드클라우드 데이터 추출
+    @PostMapping("/chatting/wordCloud")
+    public List<String> getWordCloud(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
+        VideoEntity videoEntity = repository.findByVideoid(videoid);
+        if (videoEntity == null) {
+            throw new RuntimeException("videoid 검색 실패 : " + videoid);
+        }
+        String videoId = videoEntity.getVideoid();
+
+        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
+
+        // videoId로 필터링
+        List<Map<String, Object>> filteredResults = checkVideoId(videoId, searchList);
+
+        //워드클라우드 데이터 추출
+        return findValue("message", filteredResults);
+    }
 }
