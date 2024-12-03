@@ -1,8 +1,9 @@
 elasticsearch:
   hosts:
-    - "a997f27ccab3e42b389e52bbe96dbee8-274686218.us-east-1.elb.amazonaws.com:9200"
-    - "elasticsearch-data1-cs:9200"
-    - "elasticsearch-data2-cs:9200"
+    - "172.20.20.28:9200"  # elasticsearch-cs
+    - "172.20.44.36:9200"   # elasticsearch-data1-cs
+    - "172.20.209.190:9200"   # elasticsearch-data2-cs
+    - "a54173189a8914c5d869f690dc5812ff-691083453.us-east-1.elb.amazonaws.com:9200"  # elasticsearch-lb
   socketTimeout: 60000
   connectionTimeout: 5000
   maxConnTotal: 500
