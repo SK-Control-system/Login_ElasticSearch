@@ -46,12 +46,9 @@ jobs:
           gradle bootJar
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          
+      # - name: Update kubeconfig
+      #   run: |
+      #     aws eks update-kubeconfig --region us-east-1 --name CC-cluster
 
-#      - name: Update image tag in deployment.yaml
-#        run: |
-#          sed -i "s|615299753054.dkr.ecr.us-east-1.amazonaws.com/spring/jj-server:latest|${{ steps.login-ecr.outputs.registry }}/spring/jj-server:${{ github.run_number }}|" deployment.yaml
-#
-#      - name: Apply Kubernetes deployment
-#        run: |
-#          kubectl apply -f deployment.yaml
 
