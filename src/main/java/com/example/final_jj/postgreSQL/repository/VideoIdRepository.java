@@ -6,7 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface PostgreSQLRepository extends JpaRepository<VideoEntity, String> {
+
+public interface VideoIdRepository extends JpaRepository<VideoEntity, String> {
     @Query("SELECT v.videoid FROM VideoEntity v")
     List<String> findAllVideoIds();
 

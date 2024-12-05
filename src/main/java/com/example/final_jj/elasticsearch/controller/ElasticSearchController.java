@@ -1,21 +1,12 @@
 package com.example.final_jj.elasticsearch.controller;
 
-import com.example.final_jj.elasticsearch.enums.HttpMethodEnum;
-import com.example.final_jj.elasticsearch.factor.ElasticSearchClientFactory;
 import com.example.final_jj.elasticsearch.service.Impl.ElasticSearchService;
-import com.example.final_jj.elasticsearch.utils.common.ElasticExecutor;
-import com.example.final_jj.postgreSQL.entity.VideoEntity;
-import com.example.final_jj.postgreSQL.repository.PostgreSQLRepository;
-import org.elasticsearch.client.RestClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.example.final_jj.postgreSQL.repository.VideoIdRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -24,7 +15,7 @@ import java.util.Map;
 public class ElasticSearchController {
 
     @Autowired
-    private PostgreSQLRepository repository;
+    private VideoIdRepository repository;
 
     @Autowired
     private ElasticSearchService elasticSearchService;

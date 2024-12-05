@@ -5,14 +5,13 @@ import com.example.final_jj.elasticsearch.enums.HttpMethodEnum;
 import com.example.final_jj.elasticsearch.factor.ElasticSearchClientFactory;
 import com.example.final_jj.elasticsearch.utils.common.ElasticExecutor;
 import com.example.final_jj.postgreSQL.entity.VideoEntity;
-import com.example.final_jj.postgreSQL.repository.PostgreSQLRepository;
+import com.example.final_jj.postgreSQL.repository.VideoIdRepository;
 import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -24,7 +23,7 @@ import java.util.Map;
 public class ElasticSearchService {
 
     @Autowired
-    private PostgreSQLRepository repository;
+    private VideoIdRepository repository;
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchController.class);
 
