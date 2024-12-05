@@ -4,7 +4,10 @@ import com.example.final_jj.elasticsearch.controller.ElasticSearchController;
 import com.example.final_jj.elasticsearch.enums.HttpMethodEnum;
 import com.example.final_jj.elasticsearch.factor.ElasticSearchClientFactory;
 import com.example.final_jj.elasticsearch.utils.common.ElasticExecutor;
+import com.example.final_jj.postgreSQL.entity.ReportEntity;
 import com.example.final_jj.postgreSQL.entity.VideoEntity;
+import com.example.final_jj.postgreSQL.repository.ReportRepository;
+import com.example.final_jj.postgreSQL.repository.SubscribeRepository;
 import com.example.final_jj.postgreSQL.repository.VideoIdRepository;
 import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
@@ -15,15 +18,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ElasticSearchService {
 
     @Autowired
     private VideoIdRepository repository;
+
+    @Autowired
+    private ReportRepository reportRepository;
+
+    @Autowired
+    private SubscribeRepository subscribeRepository;
+
 
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchController.class);
 
@@ -241,5 +251,81 @@ public class ElasticSearchService {
         return buckets;
     }
 
+    /**
+     * Elasticsearch에서 채널 ID로 비디오 데이터를 검색하고 PostgreSQL에 저장
+     */
+    public List<ReportEntity> processAndSaveReports(Long userId, String index, String queryJson) {
+        // 1. 사용자 ID 검증
+        if (userId == null) {
+            throw new IllegalArgumentException("User ID cannot be null.");
+        }
 
+        // 2. 구독한 채널 ID 조회
+        List<String> channelIds = subscribeRepository.findChannelIdsByUserId(userId);
+        if (channelIds == null || channelIds.isEmpty()) {
+            throw new IllegalArgumentException("No subscribed channels found for user ID: " + userId);
+        }
+
+        // 3. Elasticsearch에서 채널 ID로 비디오 데이터 검색
+        List<ReportEntity> allReports = new ArrayList<>();
+        for (String channelId : channelIds) {
+            List<Map<String, Object>> searchResults = searchDocuments(index, queryJson);
+
+            // 4. Elasticsearch 결과를 ReportEntity로 변환
+            List<ReportEntity> reports = searchResults.stream()
+                    .filter(result -> channelId.equals(result.get("channelId")))
+                    .map(this::mapToReportEntity)
+                    .collect(Collectors.toList());
+
+            allReports.addAll(reports);
+        }
+
+        // 5. 데이터 저장
+        if (!allReports.isEmpty()) {
+            logger.info("Saving reports: {}", allReports);
+            reportRepository.saveAll(allReports);
+        } else {
+            logger.warn("No reports to save for user ID: {}", userId);
+        }
+
+        return allReports.stream()
+                .sorted(Comparator.comparing(ReportEntity::getActualstarttime)) // actualStartTime 기준 정렬
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Elasticsearch 결과를 ReportEntity로 매핑
+     */
+    private ReportEntity mapToReportEntity(Map<String, Object> result) {
+        Map<String, Object> videoData = (Map<String, Object>) result.get("videoData");
+        if (videoData == null) {
+            logger.warn("Missing videoData in Elasticsearch result: {}", result);
+            return null; // 또는 빈 객체 반환
+        }
+
+        ReportEntity report = new ReportEntity();
+        report.setVideoId((String) videoData.get("videoId"));
+        report.setChannelId((String) videoData.get("channelId"));
+        report.setLikecount((String) videoData.getOrDefault("likeCount", "0"));
+        report.setConcurrentviewers((String) videoData.getOrDefault("concurrentViewers", "0"));
+        report.setVideotitle((String) videoData.get("videoTitle"));
+        report.setActualstarttime(videoData.get("actualStartTime") != null
+                ? LocalDateTime.parse((String) videoData.get("actualStartTime"))
+                : null);
+
+        return report;
+    }
+
+    /**
+     * 필드별 데이터 추출
+     */
+    public Map<String, List<?>> extractFieldsFromReports(List<ReportEntity> reports) {
+        Map<String, List<?>> fieldData = new HashMap<>();
+        fieldData.put("videoIds", reports.stream().map(ReportEntity::getVideoId).collect(Collectors.toList()));
+        fieldData.put("likeCounts", reports.stream().map(ReportEntity::getLikecount).collect(Collectors.toList()));
+        fieldData.put("concurrentViewers", reports.stream().map(ReportEntity::getConcurrentviewers).collect(Collectors.toList()));
+        fieldData.put("titles", reports.stream().map(ReportEntity::getVideotitle).collect(Collectors.toList()));
+        fieldData.put("startTimes", reports.stream().map(ReportEntity::getActualstarttime).collect(Collectors.toList()));
+        return fieldData;
+    }
 }

@@ -17,4 +17,12 @@ public interface SubscribeRepository extends JpaRepository<SubscribeEntity, Long
         AND s.userId = :userId
         """)
     List<String> findVideoIdsByUserId(@Param("userId") Long userId);
+
+    @Query("""
+    SELECT DISTINCT s.channelId
+    FROM SubscribeEntity s
+    WHERE s.userId = :userId
+    """)
+    List<String> findChannelIdsByUserId(@Param("userId") Long userId);
+
 }

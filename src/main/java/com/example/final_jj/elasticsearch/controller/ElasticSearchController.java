@@ -1,12 +1,14 @@
 package com.example.final_jj.elasticsearch.controller;
 
 import com.example.final_jj.elasticsearch.service.Impl.ElasticSearchService;
+import com.example.final_jj.postgreSQL.entity.ReportEntity;
 import com.example.final_jj.postgreSQL.repository.VideoIdRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -101,6 +103,51 @@ public class ElasticSearchController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
+        }
+    }
+
+    /**
+     * 사용자 ID를 기반으로 보고서 처리 및 결과 반환
+     */
+    /**
+     * 사용자 ID를 기반으로 Elasticsearch에서 데이터 조회 후 PostgreSQL에 저장
+     */
+    @PostMapping("/report/save/{userId}")
+    public ResponseEntity<List<ReportEntity>> processAndSaveReports(
+            @PathVariable Long userId,
+            @RequestParam String index,
+            @RequestBody String queryJson) {
+        try {
+            // 서비스 호출
+            List<ReportEntity> reports = elasticSearchService.processAndSaveReports(userId, index, queryJson);
+            return ResponseEntity.ok(reports); // 정렬된 결과 반환
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+
+    /**
+     * 필드별 데이터 추출
+     */
+    @PostMapping("/report/fields/{userId}")
+    public ResponseEntity<Map<String, List<?>>> extractFields(
+            @PathVariable Long userId,
+            @RequestParam String index,
+            @RequestBody String queryJson) {
+        try {
+            List<ReportEntity> reports = elasticSearchService.processAndSaveReports(userId, index, queryJson);
+            Map<String, List<?>> fieldData = elasticSearchService.extractFieldsFromReports(reports);
+            return ResponseEntity.ok(fieldData);
+        } catch (RuntimeException e) {
+            // 예외 발생 시 적절한 타입으로 반환
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Collections.emptyMap());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.emptyMap());
         }
     }
 }

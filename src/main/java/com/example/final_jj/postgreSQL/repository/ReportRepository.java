@@ -18,5 +18,4 @@ public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
     // 특정 비디오 ID로 보고서 데이터 가져오기
     @Query("SELECT r FROM ReportEntity r WHERE r.videoId = :videoId")
     ReportEntity findByVideoId(@Param("videoId") String videoId);
-
 }
