@@ -109,20 +109,20 @@ public class ElasticSearchController {
         }
     }
 
-    @GetMapping("/channel-ids")
+    @PostMapping("/channel-ids")
     public ResponseEntity<List<String>> getChannelIdByUserId(@RequestParam long userId) {
         List<String> channelIds = elasticSearchService.getChannelIdByUserId(userId);
         return ResponseEntity.ok(channelIds);
     }
 
-    @GetMapping("/video-ids")
-    public ResponseEntity<List<String>> getVideoIdsByChannelId(@RequestParam String index, @RequestParam String queryJson, @RequestParam String channelId) {
+    @PostMapping("/video-ids")
+    public ResponseEntity<List<String>> getVideoIdsByChannelId(@RequestParam String index, @RequestBody String queryJson, @RequestParam String channelId) {
         List<String> videoIds = elasticSearchService.getVideoIdsByChannelId(index, queryJson, channelId);
         return ResponseEntity.ok(videoIds);
     }
 
-    @GetMapping("/report-data")
-    public ResponseEntity<Map<String, List<String>>> saveReportDataByVideoId(@RequestParam String index, @RequestParam String queryJson) {
+    @PostMapping("/report-data")
+    public ResponseEntity<Map<String, List<String>>> saveReportDataByVideoId(@RequestParam String index, @RequestBody String queryJson) {
         Map<String, List<String>> reportData = elasticSearchService.saveReportDataByVideoId(index, queryJson);
         return ResponseEntity.ok(reportData);
     }

@@ -4,6 +4,7 @@ import com.example.final_jj.elasticsearch.controller.ElasticSearchController;
 import com.example.final_jj.elasticsearch.enums.HttpMethodEnum;
 import com.example.final_jj.elasticsearch.factor.ElasticSearchClientFactory;
 import com.example.final_jj.elasticsearch.utils.common.ElasticExecutor;
+import com.example.final_jj.postgreSQL.entity.ReportEntity;
 import com.example.final_jj.postgreSQL.entity.VideoEntity;
 import com.example.final_jj.postgreSQL.repository.ReportRepository;
 import com.example.final_jj.postgreSQL.repository.SubscribeRepository;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ElasticSearchService {
@@ -317,20 +319,30 @@ public class ElasticSearchService {
         String searchSourceQuery = "{"
                 + "  \"query\": {"
                 + "    \"term\": {"
-                + "      \"channelId\": \"" + channelid + "\""
+                + "      \"videoData.channelId\": {"
+                + "        \"value\": \"" + channelid + "\""
+                + "      }"
                 + "    }"
                 + "  }"
                 + "}";
+
 
         // 채널 아이디로 비디오 데이터 검색
         List<Map<String, Object>> searchList = searchSourceDocuments(index, searchSourceQuery);
         List<String> videoIds = findValue("videoId", searchList);
 
         // 비디오 아이디 리스트를 저장하고 반환
-        videoIds.forEach(videoId -> {
-            reportRepository.save(videoId); // reportRepository에서 저장
-            videoIdList.add(videoId);
-        });
+        List<ReportEntity> reports = videoIds.stream()
+                .map(videoId -> {
+                    ReportEntity report = new ReportEntity();
+                    report.setVideoId(videoId);
+                    // 필요한 다른 필드 설정
+                    return report;
+                })
+                .collect(Collectors.toList());
+
+        reportRepository.saveAll(reports);
+
 
         return videoIdList;
     }

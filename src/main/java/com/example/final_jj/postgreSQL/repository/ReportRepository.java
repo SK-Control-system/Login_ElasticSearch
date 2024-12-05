@@ -19,8 +19,6 @@ public interface ReportRepository extends JpaRepository<ReportEntity, Long> {
     @Query("SELECT r FROM ReportEntity r WHERE r.videoId = :videoId")
     ReportEntity findByVideoId(@Param("videoId") String videoId);
 
-    String save(String videoId);
-
     List<String> save(List<String> lists);
 
     @Query("SELECT DISTINCT r.videoId FROM ReportEntity r")
