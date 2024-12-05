@@ -1,7 +1,7 @@
 package com.example.final_jj.redis.service;
 
-import com.example.final_jj.postgreSQL.repository.PostgreSQLRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.example.final_jj.postgreSQL.repository.VideoIdRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,7 +21,7 @@ public class RedisService {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private PostgreSQLRepository repository;
+    private VideoIdRepository repository;
 
     // Redis에서 데이터 가져오기
     public String getVideoData(String videoId) {
