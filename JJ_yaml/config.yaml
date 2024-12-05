@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: live-control-config
+  labels:
+    app: live-control-spring
+data:
+  application.properties: |
+    spring.application.name=live-control-spring
+    
+    spring.redis.host=redis-service  # Redis 서비스 이름 (ClusterIP)
+    spring.redis.port=6379
+    spring.redis.timeout=3000
