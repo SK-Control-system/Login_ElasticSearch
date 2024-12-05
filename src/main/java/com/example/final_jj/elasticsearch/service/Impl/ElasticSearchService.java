@@ -166,6 +166,22 @@ public class ElasticSearchService {
         return findValue("videoData.concurrentViewers", filteredResults);
     }
 
+    public List<String> searchConcurrentViewersWithTime(String index, String queryJson, String videoid) {
+        VideoEntity videoEntity = repository.findByVideoid(videoid);
+        if (videoEntity == null) {
+            throw new RuntimeException("videoid 검색 실패 : " + videoid);
+        }
+        String videoId = videoEntity.getVideoid();
+
+        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
+
+        // videoId로 필터링
+        List<Map<String, Object>> filteredResults = checkVideoId(videoId, searchList);
+
+        // 시청자수 추출
+        return findValue("videoData.videoAPIReceivedTime", filteredResults);
+    }
+
     public List<String> searchLikeCount(String index, String queryJson, String videoid) {
         VideoEntity videoEntity = repository.findByVideoid(videoid);
         if (videoEntity == null) {

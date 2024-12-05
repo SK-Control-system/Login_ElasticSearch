@@ -77,6 +77,18 @@ public class ElasticSearchController {
         }
     }
 
+    @PostMapping("/video/search/searchConcurrentViewersWithTime")
+    public ResponseEntity<?> searchConcurrentViewersWithTime(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
+        try {
+            List<String> ConcurrentViewersWithTime = elasticSearchService.searchConcurrentViewersWithTime(index, queryJson, videoid);
+            return ResponseEntity.ok(ConcurrentViewersWithTime);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
+        }
+    }
+
     @PostMapping("/video/search/likeCount")
     public ResponseEntity<?> searchLikeCount(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
         try {
