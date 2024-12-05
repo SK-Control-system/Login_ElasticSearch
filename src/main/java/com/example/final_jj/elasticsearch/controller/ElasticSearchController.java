@@ -1,12 +1,14 @@
 package com.example.final_jj.elasticsearch.controller;
 
 import com.example.final_jj.elasticsearch.service.Impl.ElasticSearchService;
+import com.example.final_jj.postgreSQL.repository.ReportRepository;
 import com.example.final_jj.postgreSQL.repository.VideoIdRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +18,9 @@ public class ElasticSearchController {
 
     @Autowired
     private VideoIdRepository repository;
+
+    @Autowired
+    private ReportRepository reportRepository;
 
     @Autowired
     private ElasticSearchService elasticSearchService;
@@ -103,4 +108,52 @@ public class ElasticSearchController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal server error");
         }
     }
+
+    @GetMapping("/channel-ids")
+    public ResponseEntity<List<String>> getChannelIdByUserId(@RequestParam long userId) {
+        List<String> channelIds = elasticSearchService.getChannelIdByUserId(userId);
+        return ResponseEntity.ok(channelIds);
+    }
+
+    @GetMapping("/video-ids")
+    public ResponseEntity<List<String>> getVideoIdsByChannelId(@RequestParam String index, @RequestParam String queryJson, @RequestParam String channelId) {
+        List<String> videoIds = elasticSearchService.getVideoIdsByChannelId(index, queryJson, channelId);
+        return ResponseEntity.ok(videoIds);
+    }
+
+    @GetMapping("/report-data")
+    public ResponseEntity<Map<String, List<String>>> saveReportDataByVideoId(@RequestParam String index, @RequestParam String queryJson) {
+        Map<String, List<String>> reportData = elasticSearchService.saveReportDataByVideoId(index, queryJson);
+        return ResponseEntity.ok(reportData);
+    }
+
+    /**
+     * DB에서 각 필드별 리스트 데이터를 조회하여 프론트에 전달
+     */
+    @GetMapping("/fetch")
+    public ResponseEntity<Map<String, List<String>>> fetchReportData() {
+        // 각 필드별 데이터 조회
+        List<String> videoIds = reportRepository.findDistinctVideoIds();
+        List<String> concurrentViewers = reportRepository.findDistinctConcurrentViewers();
+        List<String> likeCounts = reportRepository.findDistinctLikeCounts();
+        List<String> videoTitles = reportRepository.findDistinctVideoTitles();
+        List<String> actualStartTimes = reportRepository.findDistinctActualStartTimes();
+        List<String> videoThumbnailUrls = reportRepository.findDistinctVideoThumbnailUrls();
+        List<String> channelIds = reportRepository.findDistinctChannelIds();
+        List<String> channelTitles = reportRepository.findDistinctChannelTitles();
+
+        // 데이터를 Map에 담아 프론트로 반환
+        Map<String, List<String>> response = new HashMap<>();
+        response.put("videoIds", videoIds);
+        response.put("concurrentViewers", concurrentViewers);
+        response.put("likeCounts", likeCounts);
+        response.put("videoTitles", videoTitles);
+        response.put("actualStartTimes", actualStartTimes);
+        response.put("videoThumbnailUrls", videoThumbnailUrls);
+        response.put("channelIds", channelIds);
+        response.put("channelTitles", channelTitles);
+
+        return ResponseEntity.ok(response);
+    }
+
 }
