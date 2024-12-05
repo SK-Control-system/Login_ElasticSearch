@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 public class ReportEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // 리포트 ID (Primary Key)
+    private int id; // 리포트 ID (Primary Key)
 
     @Column(name ="videoid", nullable = false, length = 100)
     private String videoId; // 비디오 ID
@@ -37,7 +37,7 @@ public class ReportEntity {
     @Column(name="channelid", nullable = false, length = 100)
     private String channelId; // 채널 ID
 
-    @Column(nullable = false)
-    private LocalDateTime createdat = LocalDateTime.now(); // 생성 시간
+    @Column(name="created_at")
+    private LocalDateTime createdAt = LocalDateTime.now(); // 생성 시간
 
 }
