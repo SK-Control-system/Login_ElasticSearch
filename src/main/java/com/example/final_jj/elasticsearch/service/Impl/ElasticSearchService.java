@@ -336,62 +336,118 @@ public class ElasticSearchService {
                 .map(videoId -> {
                     ReportEntity report = new ReportEntity();
                     report.setVideoId(videoId);
-                    // 필요한 다른 필드 설정
+                    report.setChannelId(channelid);
                     return report;
                 })
                 .collect(Collectors.toList());
 
         reportRepository.saveAll(reports);
 
+        videoIdList = reportRepository.findDistinctVideoIds();
 
         return videoIdList;
     }
 
+//    public Map<String, List<String>> saveReportDataByVideoId(String index, String queryJson) {
+//        // 쿼리를 실행하여 데이터 검색, 오름차순까지하기
+//        List<Map<String, Object>> filteredResults = searchDocuments(index, queryJson);
+//
+//
+//        // 각 필드별 데이터 추출
+//        List<String> videoId = findValue("videoData.videoId", filteredResults);
+//        reportRepository.save(videoId);
+//
+//        List<String> concurrentViewers = findValue("videoData.concurrentViewers", filteredResults);
+//        reportRepository.save(concurrentViewers);
+//
+//        List<String> likeCount = findValue("videoData.likeCount", filteredResults);
+//        reportRepository.save(likeCount);
+//
+//        List<String> videoTitle = findValue("videoData.videoTitle", filteredResults);
+//        reportRepository.save(videoTitle);
+//
+//        List<String> actualStartTime = findValue("videoData.actualStartTime", filteredResults);
+//        reportRepository.save(actualStartTime);
+//
+//        List<String> channelId = findValue("videoData.channelId", filteredResults);
+//        reportRepository.save(channelId);
+//
+//        List<String> channelTitle = findValue("videoData.channelTitle", filteredResults);
+//        reportRepository.save(channelTitle);
+//
+//        // 필터 데이터들을 Map에 담아 반환
+//        Map<String, List<String>> filteredData = new HashMap<>();
+//        filteredData.put("videoId", videoId);
+//        filteredData.put("concurrentViewers", concurrentViewers);
+//        filteredData.put("likeCount", likeCount);
+//        filteredData.put("videoTitle", videoTitle);
+//        filteredData.put("actualStartTime", actualStartTime);
+//        filteredData.put("channelId", channelId);
+//        filteredData.put("channelTitle", channelTitle);
+//
+//        return filteredData;
+//    }
+
     public Map<String, List<String>> saveReportDataByVideoId(String index, String queryJson) {
-        // 쿼리를 실행하여 데이터 검색, 오름차순까지하기
+        // Elasticsearch에서 데이터를 검색
         List<Map<String, Object>> filteredResults = searchDocuments(index, queryJson);
 
-//        // 데이터를 정렬
-//        filteredResults.sort((a, b) -> {
-//            String timeA = (String) a.getOrDefault("videoData.actualStartTime", "");
-//            String timeB = (String) b.getOrDefault("videoData.actualStartTime", "");
-//            return timeA.compareTo(timeB);
-//        });
+        // ReportEntity로 변환하여 저장
+        List<ReportEntity> reports = new ArrayList<>();
+        for (Map<String, Object> data : filteredResults) {
+            ReportEntity report = new ReportEntity();
+            report.setVideoId(getFieldValue("videoData.videoId", data));
+            report.setConcurrentviewers(getFieldValue("videoData.concurrentViewers", data));
+            report.setLikecount(getFieldValue("videoData.likeCount", data));
+            report.setVideotitle(getFieldValue("videoData.videoTitle", data));
+            report.setActualstarttime(getFieldValue("videoData.actualStartTime", data)); // String으로 직접 저장
+            report.setChannelId(getFieldValue("videoData.channelId", data));
+            report.setChanneltitle(getFieldValue("videoData.channelTitle", data));
+            reports.add(report);
+        }
 
-        // 각 필드별 데이터 추출
-        List<String> videoId = findValue("videoData.videoId", filteredResults);
-        reportRepository.save(videoId);
+        // 데이터 저장
+        reportRepository.saveAll(reports);
 
-        List<String> concurrentViewers = findValue("videoData.concurrentViewers", filteredResults);
-        reportRepository.save(concurrentViewers);
-
-        List<String> likeCount = findValue("videoData.likeCount", filteredResults);
-        reportRepository.save(likeCount);
-
-        List<String> videoTitle = findValue("videoData.videoTitle", filteredResults);
-        reportRepository.save(videoTitle);
-
-        List<String> actualStartTime = findValue("videoData.actualStartTime", filteredResults);
-        reportRepository.save(actualStartTime);
-
-        List<String> channelId = findValue("videoData.channelId", filteredResults);
-        reportRepository.save(channelId);
-
-        List<String> channelTitle = findValue("videoData.channelTitle", filteredResults);
-        reportRepository.save(channelTitle);
-
-        // 필터 데이터들을 Map에 담아 반환
+        // 필터링된 데이터를 Map으로 반환
         Map<String, List<String>> filteredData = new HashMap<>();
-        filteredData.put("videoId", videoId);
-        filteredData.put("concurrentViewers", concurrentViewers);
-        filteredData.put("likeCount", likeCount);
-        filteredData.put("videoTitle", videoTitle);
-        filteredData.put("actualStartTime", actualStartTime);
-        filteredData.put("channelId", channelId);
-        filteredData.put("channelTitle", channelTitle);
+        filteredData.put("videoId", extractFieldValues("videoData.videoId", filteredResults));
+        filteredData.put("concurrentViewers", extractFieldValues("videoData.concurrentViewers", filteredResults));
+        filteredData.put("likeCount", extractFieldValues("videoData.likeCount", filteredResults));
+        filteredData.put("videoTitle", extractFieldValues("videoData.videoTitle", filteredResults));
+        filteredData.put("actualStartTime", extractFieldValues("videoData.actualStartTime", filteredResults));
+        filteredData.put("channelId", extractFieldValues("videoData.channelId", filteredResults));
+        filteredData.put("channelTitle", extractFieldValues("videoData.channelTitle", filteredResults));
 
         return filteredData;
     }
+
+    private String getFieldValue(String keyPath, Map<String, Object> data) {
+        String[] keys = keyPath.split("\\.");
+        Object value = data;
+        for (String key : keys) {
+            if (value instanceof Map) {
+                value = ((Map<?, ?>) value).get(key);
+            } else {
+                return null;
+            }
+        }
+        return value != null ? value.toString() : null;
+    }
+
+    private List<String> extractFieldValues(String keyPath, List<Map<String, Object>> results) {
+        List<String> values = new ArrayList<>();
+        for (Map<String, Object> data : results) {
+            String value = getFieldValue(keyPath, data);
+            if (value != null) {
+                values.add(value);
+            }
+        }
+        return values;
+    }
+
+
+
 
 
 }

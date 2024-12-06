@@ -26,7 +26,7 @@ public class ReportEntity {
     private String videotitle; // 비디오 제목
 
     @Column
-    private LocalDateTime actualstarttime; // 실제 방송 시작 시간
+    private String actualstarttime; // 실제 방송 시작 시간
 
     @Column(length = 500)
     private String videothumbnailurl; // 비디오 썸네일 URL
