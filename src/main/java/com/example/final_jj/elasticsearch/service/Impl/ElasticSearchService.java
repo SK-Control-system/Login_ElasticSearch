@@ -177,16 +177,16 @@ public class ElasticSearchService {
     }
 
     public List<String> searchConcurrentViewersWithTime(String index, String queryJson, String videoid) {
-        VideoEntity videoEntity = videoIdRepository.findByVideoid(videoid);
-        if (videoEntity == null) {
-            throw new RuntimeException("videoid 검색 실패 : " + videoid);
-        }
-        String videoId = videoEntity.getVideoid();
+//        VideoEntity videoEntity = videoIdRepository.findByVideoid(videoid);
+//        if (videoEntity == null) {
+//            throw new RuntimeException("videoid 검색 실패 : " + videoid);
+//        }
+//        String videoId = videoEntity.getVideoid();
 
         List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
 
         // videoId로 필터링
-        List<Map<String, Object>> filteredResults = checkVideoId(videoId, searchList);
+        List<Map<String, Object>> filteredResults = checkVideoId(videoid, searchList);
 
         // 시청자수 추출
         return findValue("videoData.videoAPIReceivedTime", filteredResults);
