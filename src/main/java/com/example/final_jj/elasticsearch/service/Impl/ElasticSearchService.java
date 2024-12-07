@@ -128,16 +128,17 @@ public class ElasticSearchService {
     }
 
     public List<String> searchEmotion(String index, String queryJson, String videoid) {
-//        VideoEntity videoEntity = videoIdRepository.findByVideoid(videoid);
-//        if (videoEntity == null) {
-//            throw new RuntimeException("videoid 검색 실패 : " + videoid);
-//        }
-//        String videoId = videoEntity.getVideoid();
+        String searchQuery = "{"
+                + "  \"query\": {"
+                + "    \"term\": {"
+                + "      \"videoId\": {"
+                + "        \"value\": \"" + videoid + "\""
+                + "      }"
+                + "    }"
+                + "  }"
+                + "}";
 
-        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
-
-        // videoId로 필터링
-        List<Map<String, Object>> filteredResults = checkVideoId(videoid, searchList);
+        List<Map<String, Object>> filteredResults = searchSourceDocuments(index, searchQuery);
 
         // emotion.label 추출
         return findValue("chattingAnalysisResult.emotion.label", filteredResults);
@@ -145,64 +146,69 @@ public class ElasticSearchService {
 
 
     public List<String> searchSentiment(String index, String queryJson, String videoid) {
-//        VideoEntity videoEntity = videoIdRepository.findByVideoid(videoid);
-//        if (videoEntity == null) {
-//            throw new RuntimeException("videoid 검색 실패 : " + videoid);
-//        }
-//        String videoId = videoEntity.getVideoid();
+        String searchQuery = "{"
+                + "  \"query\": {"
+                + "    \"term\": {"
+                + "      \"videoId\": {"
+                + "        \"value\": \"" + videoid + "\""
+                + "      }"
+                + "    }"
+                + "  }"
+                + "}";
 
-        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
-
-        // videoId로 필터링
-        List<Map<String, Object>> filteredResults = checkVideoId(videoid, searchList);
+        List<Map<String, Object>> filteredResults = searchSourceDocuments(index, searchQuery);
 
         // sentiment.label 추출
         return findValue("chattingAnalysisResult.sentiment.label", filteredResults);
     }
 
     public List<String> searchConcurrentViewers(String index, String queryJson, String videoid) {
-//        VideoEntity videoEntity = videoIdRepository.findByVideoid(videoid);
-//        if (videoEntity == null) {
-//            throw new RuntimeException("videoid 검색 실패 : " + videoid);
-//        }
-//        String videoId = videoEntity.getVideoid();
+        String searchQuery = "{"
+                + "  \"query\": {"
+                + "    \"term\": {"
+                + "      \"videoId\": {"
+                + "        \"value\": \"" + videoid + "\""
+                + "      }"
+                + "    }"
+                + "  }"
+                + "}";
 
-        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
-
-        // videoId로 필터링
-        List<Map<String, Object>> filteredResults = checkVideoId(videoid, searchList);
+        List<Map<String, Object>> filteredResults = searchSourceDocuments(index, searchQuery);
 
         // 시청자수 추출
         return findValue("videoData.concurrentViewers", filteredResults);
     }
 
     public List<String> searchConcurrentViewersWithTime(String index, String queryJson, String videoid) {
-//        VideoEntity videoEntity = videoIdRepository.findByVideoid(videoid);
-//        if (videoEntity == null) {
-//            throw new RuntimeException("videoid 검색 실패 : " + videoid);
-//        }
-//        String videoId = videoEntity.getVideoid();
+        String searchQuery = "{"
+                + "  \"query\": {"
+                + "    \"term\": {"
+                + "      \"videoId\": {"
+                + "        \"value\": \"" + videoid + "\""
+                + "      }"
+                + "    }"
+                + "  }"
+                + "}";
 
-        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
-
-        // videoId로 필터링
-        List<Map<String, Object>> filteredResults = checkVideoId(videoid, searchList);
+        List<Map<String, Object>> filteredResults = searchSourceDocuments(index, searchQuery);
 
         // 시청자수 추출
         return findValue("videoData.videoAPIReceivedTime", filteredResults);
     }
 
     public List<String> searchLikeCount(String index, String queryJson, String videoid) {
-//        VideoEntity videoEntity = videoIdRepository.findByVideoid(videoid);
-//        if (videoEntity == null) {
-//            throw new RuntimeException("videoid 검색 실패 : " + videoid);
-//        }
-//        String videoId = videoEntity.getVideoid();
 
-        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
+        String searchQuery = "{"
+                + "  \"query\": {"
+                + "    \"term\": {"
+                + "      \"videoId\": {"
+                + "        \"value\": \"" + videoid + "\""
+                + "      }"
+                + "    }"
+                + "  }"
+                + "}";
 
-        // videoId로 필터링
-        List<Map<String, Object>> filteredResults = checkVideoId(videoid, searchList);
+        List<Map<String, Object>> filteredResults = searchSourceDocuments(index, searchQuery);
 
         // 좋아요수 추출
         return findValue("videoData.likeCount", filteredResults); // 추후 videoData.likeCount로 수정해야함
