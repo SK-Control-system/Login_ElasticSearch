@@ -45,15 +45,4 @@ public class RedisService {
         return videoData;
     }
 
-    //postgresSpl에 videoId 가져오기
-    public List<String> getVideoIdFromRedis() {
-        List<String> videoIds= repository.findAllVideoIds();
-        List<String> videoData = new ArrayList<>();
-
-        for(String videoId:videoIds) {
-            videoData.add(getVideoData(videoId));
-        }
-
-        return videoData;
-    }
 }

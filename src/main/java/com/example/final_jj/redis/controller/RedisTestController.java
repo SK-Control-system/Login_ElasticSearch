@@ -37,12 +37,6 @@ public class RedisTestController {
         }
     }
 
-    @GetMapping("/get/videoId")
-    public List<String> getVideoIdFromRedis() {
-        List<String> videoData = redisService.getVideoIdFromRedis();
-        return videoData;
-    }
-
     @GetMapping("/get/hash/videoId")
     public List<String> getVideoIdHashFromRedis() throws JsonProcessingException {
         List<String> videoData = redisService.getVideoIdHashFromRedis();

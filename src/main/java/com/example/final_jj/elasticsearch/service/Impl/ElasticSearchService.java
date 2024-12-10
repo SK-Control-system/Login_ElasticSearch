@@ -127,82 +127,88 @@ public class ElasticSearchService {
         return searchResults;
     }
 
-    public List<String> searchEmotion(String index, String queryJson, String videoid) {
-//        VideoEntity videoEntity = videoIdRepository.findByVideoid(videoid);
-//        if (videoEntity == null) {
-//            throw new RuntimeException("videoid 검색 실패 : " + videoid);
-//        }
-//        String videoId = videoEntity.getVideoid();
+    public List<String> searchEmotion(String index, String videoid) {
+        String searchQuery = "{"
+                + "  \"query\": {"
+                + "    \"term\": {"
+                + "      \"videoId\": {"
+                + "        \"value\": \"" + videoid + "\""
+                + "      }"
+                + "    }"
+                + "  }"
+                + "}";
 
-        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
-
-        // videoId로 필터링
-        List<Map<String, Object>> filteredResults = checkVideoId(videoid, searchList);
+        List<Map<String, Object>> filteredResults = searchSourceDocuments(index, searchQuery);
 
         // emotion.label 추출
         return findValue("chattingAnalysisResult.emotion.label", filteredResults);
     }
 
 
-    public List<String> searchSentiment(String index, String queryJson, String videoid) {
-//        VideoEntity videoEntity = videoIdRepository.findByVideoid(videoid);
-//        if (videoEntity == null) {
-//            throw new RuntimeException("videoid 검색 실패 : " + videoid);
-//        }
-//        String videoId = videoEntity.getVideoid();
+    public List<String> searchSentiment(String index, String videoid) {
+        String searchQuery = "{"
+                + "  \"query\": {"
+                + "    \"term\": {"
+                + "      \"videoId\": {"
+                + "        \"value\": \"" + videoid + "\""
+                + "      }"
+                + "    }"
+                + "  }"
+                + "}";
 
-        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
-
-        // videoId로 필터링
-        List<Map<String, Object>> filteredResults = checkVideoId(videoid, searchList);
+        List<Map<String, Object>> filteredResults = searchSourceDocuments(index, searchQuery);
 
         // sentiment.label 추출
         return findValue("chattingAnalysisResult.sentiment.label", filteredResults);
     }
 
-    public List<String> searchConcurrentViewers(String index, String queryJson, String videoid) {
-//        VideoEntity videoEntity = videoIdRepository.findByVideoid(videoid);
-//        if (videoEntity == null) {
-//            throw new RuntimeException("videoid 검색 실패 : " + videoid);
-//        }
-//        String videoId = videoEntity.getVideoid();
+    public List<String> searchConcurrentViewers(String index, String videoid) {
+        String searchQuery = "{"
+                + "  \"query\": {"
+                + "    \"term\": {"
+                + "      \"videoId\": {"
+                + "        \"value\": \"" + videoid + "\""
+                + "      }"
+                + "    }"
+                + "  }"
+                + "}";
 
-        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
-
-        // videoId로 필터링
-        List<Map<String, Object>> filteredResults = checkVideoId(videoid, searchList);
+        List<Map<String, Object>> filteredResults = searchSourceDocuments(index, searchQuery);
 
         // 시청자수 추출
         return findValue("videoData.concurrentViewers", filteredResults);
     }
 
-    public List<String> searchConcurrentViewersWithTime(String index, String queryJson, String videoid) {
-//        VideoEntity videoEntity = videoIdRepository.findByVideoid(videoid);
-//        if (videoEntity == null) {
-//            throw new RuntimeException("videoid 검색 실패 : " + videoid);
-//        }
-//        String videoId = videoEntity.getVideoid();
+    public List<String> searchConcurrentViewersWithTime(String index, String videoid) {
+        String searchQuery = "{"
+                + "  \"query\": {"
+                + "    \"term\": {"
+                + "      \"videoId\": {"
+                + "        \"value\": \"" + videoid + "\""
+                + "      }"
+                + "    }"
+                + "  }"
+                + "}";
 
-        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
-
-        // videoId로 필터링
-        List<Map<String, Object>> filteredResults = checkVideoId(videoid, searchList);
+        List<Map<String, Object>> filteredResults = searchSourceDocuments(index, searchQuery);
 
         // 시청자수 추출
         return findValue("videoData.videoAPIReceivedTime", filteredResults);
     }
 
-    public List<String> searchLikeCount(String index, String queryJson, String videoid) {
-//        VideoEntity videoEntity = videoIdRepository.findByVideoid(videoid);
-//        if (videoEntity == null) {
-//            throw new RuntimeException("videoid 검색 실패 : " + videoid);
-//        }
-//        String videoId = videoEntity.getVideoid();
+    public List<String> searchLikeCount(String index, String videoid) {
 
-        List<Map<String, Object>> searchList = searchDocuments(index, queryJson);
+        String searchQuery = "{"
+                + "  \"query\": {"
+                + "    \"term\": {"
+                + "      \"videoId\": {"
+                + "        \"value\": \"" + videoid + "\""
+                + "      }"
+                + "    }"
+                + "  }"
+                + "}";
 
-        // videoId로 필터링
-        List<Map<String, Object>> filteredResults = checkVideoId(videoid, searchList);
+        List<Map<String, Object>> filteredResults = searchSourceDocuments(index, searchQuery);
 
         // 좋아요수 추출
         return findValue("videoData.likeCount", filteredResults); // 추후 videoData.likeCount로 수정해야함
@@ -267,7 +273,7 @@ public class ElasticSearchService {
     }
 
 
-    public List<String> getVideoIdsByChannelId(String index, String queryJson, String channelid) {
+    public List<String> getVideoIdsByChannelId(String index, String channelid) {
         List<String> videoIdList = new ArrayList<>();
 
         String searchSourceQuery = "{"
@@ -301,46 +307,6 @@ public class ElasticSearchService {
 
         return videoIdList;
     }
-
-//    public Map<String, List<String>> saveReportDataByVideoId(String index, String queryJson) {
-//        // 쿼리를 실행하여 데이터 검색, 오름차순까지하기
-//        List<Map<String, Object>> filteredResults = searchDocuments(index, queryJson);
-//
-//
-//        // 각 필드별 데이터 추출
-//        List<String> videoId = findValue("videoData.videoId", filteredResults);
-//        reportRepository.save(videoId);
-//
-//        List<String> concurrentViewers = findValue("videoData.concurrentViewers", filteredResults);
-//        reportRepository.save(concurrentViewers);
-//
-//        List<String> likeCount = findValue("videoData.likeCount", filteredResults);
-//        reportRepository.save(likeCount);
-//
-//        List<String> videoTitle = findValue("videoData.videoTitle", filteredResults);
-//        reportRepository.save(videoTitle);
-//
-//        List<String> actualStartTime = findValue("videoData.actualStartTime", filteredResults);
-//        reportRepository.save(actualStartTime);
-//
-//        List<String> channelId = findValue("videoData.channelId", filteredResults);
-//        reportRepository.save(channelId);
-//
-//        List<String> channelTitle = findValue("videoData.channelTitle", filteredResults);
-//        reportRepository.save(channelTitle);
-//
-//        // 필터 데이터들을 Map에 담아 반환
-//        Map<String, List<String>> filteredData = new HashMap<>();
-//        filteredData.put("videoId", videoId);
-//        filteredData.put("concurrentViewers", concurrentViewers);
-//        filteredData.put("likeCount", likeCount);
-//        filteredData.put("videoTitle", videoTitle);
-//        filteredData.put("actualStartTime", actualStartTime);
-//        filteredData.put("channelId", channelId);
-//        filteredData.put("channelTitle", channelTitle);
-//
-//        return filteredData;
-//    }
 
     public Map<String, List<String>> saveReportDataByVideoId(String index, String queryJson) {
         // Elasticsearch에서 데이터를 검색
