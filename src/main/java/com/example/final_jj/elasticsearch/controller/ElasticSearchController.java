@@ -38,9 +38,9 @@ public class ElasticSearchController {
     }
 
     @PostMapping("/chatting/search/emotion")
-    public ResponseEntity<?> searchEmotion(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
+    public ResponseEntity<?> searchEmotion(@RequestParam String index, @RequestParam String videoid) {
         try {
-            List<String> emotionLabels = elasticSearchService.searchEmotion(index, queryJson, videoid);
+            List<String> emotionLabels = elasticSearchService.searchEmotion(index, videoid);
             return ResponseEntity.ok(emotionLabels);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -50,9 +50,9 @@ public class ElasticSearchController {
     }
 
     @PostMapping("/chatting/search/sentiment")
-    public ResponseEntity<?> searchSentiment(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
+    public ResponseEntity<?> searchSentiment(@RequestParam String index, @RequestParam String videoid) {
         try {
-            List<String> sentimentLabels = elasticSearchService.searchSentiment(index, queryJson, videoid);
+            List<String> sentimentLabels = elasticSearchService.searchSentiment(index, videoid);
             return ResponseEntity.ok(sentimentLabels);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -62,9 +62,9 @@ public class ElasticSearchController {
     }
 
     @PostMapping("/video/search/concurrentViewers")
-    public ResponseEntity<?> searchConcurrentViewers(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
+    public ResponseEntity<?> searchConcurrentViewers(@RequestParam String index, @RequestParam String videoid) {
         try {
-            List<String> concurrentViewers = elasticSearchService.searchConcurrentViewers(index, queryJson, videoid);
+            List<String> concurrentViewers = elasticSearchService.searchConcurrentViewers(index, videoid);
             return ResponseEntity.ok(concurrentViewers);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -74,9 +74,9 @@ public class ElasticSearchController {
     }
 
     @PostMapping("/video/search/searchConcurrentViewersWithTime")
-    public ResponseEntity<?> searchConcurrentViewersWithTime(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
+    public ResponseEntity<?> searchConcurrentViewersWithTime(@RequestParam String index, @RequestParam String videoid) {
         try {
-            List<String> ConcurrentViewersWithTime = elasticSearchService.searchConcurrentViewersWithTime(index, queryJson, videoid);
+            List<String> ConcurrentViewersWithTime = elasticSearchService.searchConcurrentViewersWithTime(index, videoid);
             return ResponseEntity.ok(ConcurrentViewersWithTime);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -86,9 +86,9 @@ public class ElasticSearchController {
     }
 
     @PostMapping("/video/search/likeCount")
-    public ResponseEntity<?> searchLikeCount(@RequestParam String index, @RequestBody String queryJson, @RequestParam String videoid) {
+    public ResponseEntity<?> searchLikeCount(@RequestParam String index, @RequestParam String videoid) {
         try {
-            List<String> likeCounts = elasticSearchService.searchLikeCount(index, queryJson, videoid);
+            List<String> likeCounts = elasticSearchService.searchLikeCount(index, videoid);
             return ResponseEntity.ok(likeCounts);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -116,8 +116,8 @@ public class ElasticSearchController {
     }
 
     @PostMapping("/video-ids")
-    public ResponseEntity<List<String>> getVideoIdsByChannelId(@RequestParam String index, @RequestBody String queryJson, @RequestParam String channelId) {
-        List<String> videoIds = elasticSearchService.getVideoIdsByChannelId(index, queryJson, channelId);
+    public ResponseEntity<List<String>> getVideoIdsByChannelId(@RequestParam String index, @RequestParam String channelId) {
+        List<String> videoIds = elasticSearchService.getVideoIdsByChannelId(index, channelId);
         return ResponseEntity.ok(videoIds);
     }
 
@@ -127,9 +127,6 @@ public class ElasticSearchController {
         return ResponseEntity.ok(reportData);
     }
 
-    /**
-     * DB에서 각 필드별 리스트 데이터를 조회하여 프론트에 전달
-     */
     @GetMapping("/fetch")
     public ResponseEntity<Map<String, List<String>>> fetchReportData() {
         // 각 필드별 데이터 조회
