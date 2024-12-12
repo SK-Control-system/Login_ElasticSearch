@@ -136,14 +136,7 @@ public class ElasticSearchService {
                 + "      }"
                 + "    }"
                 + "  },"
-                + "  \"size\": 10000,"
-                + "  \"sort\": ["
-                + "    {"
-                + "      \"videoData.chattingAPIReceivedTime\": {"
-                + "        \"order\": \"asc\""
-                + "      }"
-                + "    }"
-                + "  ]"
+                + "  \"size\": 10000"
                 + "}";
 
 
@@ -163,14 +156,7 @@ public class ElasticSearchService {
                 + "      }"
                 + "    }"
                 + "  },"
-                + "  \"size\": 10000,"
-                + "  \"sort\": ["
-                + "    {"
-                + "      \"videoData.chattingAPIReceivedTime\": {"
-                + "        \"order\": \"asc\""
-                + "      }"
-                + "    }"
-                + "  ]"
+                + "  \"size\": 10000"
                 + "}";
 
 
