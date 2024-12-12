@@ -8,8 +8,7 @@ name: AWS ECR push & deploy EKS
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+  
 jobs:
   deploy:
     name: Deploy
@@ -49,8 +48,12 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:${IMAGE_TAG}
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
           
-      # - name: Update kubeconfig
-      #   run: |
-      #     aws eks update-kubeconfig --region us-east-1 --name CC-cluster
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name CC-cluster
+
+      - name: Verify deployment
+        run: |
+          kubectl rollout status deployment/$ECR_REPOSITORY
 
 
