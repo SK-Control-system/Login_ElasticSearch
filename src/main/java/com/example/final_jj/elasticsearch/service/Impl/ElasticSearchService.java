@@ -380,9 +380,4 @@ public class ElasticSearchService {
         }
         return values;
     }
-
-
-
-
-
 }
