@@ -136,7 +136,14 @@ public class ElasticSearchService {
                 + "      }"
                 + "    }"
                 + "  },"
-                + "  \"size\": 10000"
+                + "  \"size\": 10000,"
+                + "  \"sort\": ["
+                + "    {"
+                + "      \"videoData.chattingAPIReceivedTime\": {"
+                + "        \"order\": \"asc\""
+                + "      }"
+                + "    }"
+                + "  ]"
                 + "}";
 
 
@@ -156,7 +163,14 @@ public class ElasticSearchService {
                 + "      }"
                 + "    }"
                 + "  },"
-                + "  \"size\": 10000"
+                + "  \"size\": 10000,"
+                + "  \"sort\": ["
+                + "    {"
+                + "      \"videoData.chattingAPIReceivedTime\": {"
+                + "        \"order\": \"asc\""
+                + "      }"
+                + "    }"
+                + "  ]"
                 + "}";
 
 
@@ -175,7 +189,14 @@ public class ElasticSearchService {
                 + "      }"
                 + "    }"
                 + "  },"
-                + "  \"size\": 10000"
+                + "  \"size\": 10000,"
+                + "  \"sort\": ["
+                + "    {"
+                + "      \"videoData.videoAPIReceivedTime\": {"
+                + "        \"order\": \"asc\""
+                + "      }"
+                + "    }"
+                + "  ]"
                 + "}";
 
 
@@ -194,7 +215,14 @@ public class ElasticSearchService {
                 + "      }"
                 + "    }"
                 + "  },"
-                + "  \"size\": 10000"
+                + "  \"size\": 10000,"
+                + "  \"sort\": ["
+                + "    {"
+                + "      \"videoData.videoAPIReceivedTime\": {"
+                + "        \"order\": \"asc\""
+                + "      }"
+                + "    }"
+                + "  ]"
                 + "}";
 
 
@@ -214,7 +242,14 @@ public class ElasticSearchService {
                 + "      }"
                 + "    }"
                 + "  },"
-                + "  \"size\": 10000"
+                + "  \"size\": 10000,"
+                + "  \"sort\": ["
+                + "    {"
+                + "      \"videoData.videoAPIReceivedTime\": {"
+                + "        \"order\": \"asc\""
+                + "      }"
+                + "    }"
+                + "  ]"
                 + "}";
 
 
