@@ -135,8 +135,10 @@ public class ElasticSearchService {
                 + "        \"value\": \"" + videoid + "\""
                 + "      }"
                 + "    }"
-                + "  }"
+                + "  },"
+                + "  \"size\": 10000"
                 + "}";
+
 
         List<Map<String, Object>> filteredResults = searchSourceDocuments(index, searchQuery);
 
@@ -153,8 +155,10 @@ public class ElasticSearchService {
                 + "        \"value\": \"" + videoid + "\""
                 + "      }"
                 + "    }"
-                + "  }"
+                + "  },"
+                + "  \"size\": 10000"
                 + "}";
+
 
         List<Map<String, Object>> filteredResults = searchSourceDocuments(index, searchQuery);
 
@@ -170,8 +174,10 @@ public class ElasticSearchService {
                 + "        \"value\": \"" + videoid + "\""
                 + "      }"
                 + "    }"
-                + "  }"
+                + "  },"
+                + "  \"size\": 10000"
                 + "}";
+
 
         List<Map<String, Object>> filteredResults = searchSourceDocuments(index, searchQuery);
 
@@ -187,8 +193,10 @@ public class ElasticSearchService {
                 + "        \"value\": \"" + videoid + "\""
                 + "      }"
                 + "    }"
-                + "  }"
+                + "  },"
+                + "  \"size\": 10000"
                 + "}";
+
 
         List<Map<String, Object>> filteredResults = searchSourceDocuments(index, searchQuery);
 
@@ -205,8 +213,10 @@ public class ElasticSearchService {
                 + "        \"value\": \"" + videoid + "\""
                 + "      }"
                 + "    }"
-                + "  }"
+                + "  },"
+                + "  \"size\": 10000"
                 + "}";
+
 
         List<Map<String, Object>> filteredResults = searchSourceDocuments(index, searchQuery);
 
@@ -220,9 +230,12 @@ public class ElasticSearchService {
         String searchSourceQuery = "{"
                 + "  \"query\": {"
                 + "    \"term\": {"
-                + "      \"videoId\": \"" + videoid + "\""
+                + "      \"videoId\": {"
+                + "        \"value\": \"" + videoid + "\""
+                + "      }"
                 + "    }"
-                + "  }"
+                + "  },"
+                + "  \"size\": 10000"
                 + "}";
 
         // searchSourceDocuments 호출
@@ -284,6 +297,8 @@ public class ElasticSearchService {
                 + "      }"
                 + "    }"
                 + "  }"
+                + "},"
+                + "  \"size\": 10000"
                 + "}";
 
 
