@@ -5,7 +5,6 @@ import com.example.final_jj.elasticsearch.enums.HttpMethodEnum;
 import com.example.final_jj.elasticsearch.factor.ElasticSearchClientFactory;
 import com.example.final_jj.elasticsearch.utils.common.ElasticExecutor;
 import com.example.final_jj.postgreSQL.entity.ReportEntity;
-import com.example.final_jj.postgreSQL.entity.VideoEntity;
 import com.example.final_jj.postgreSQL.repository.ReportRepository;
 import com.example.final_jj.postgreSQL.repository.SubscribeRepository;
 import com.example.final_jj.postgreSQL.repository.VideoIdRepository;
@@ -17,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -399,9 +397,4 @@ public class ElasticSearchService {
         }
         return values;
     }
-
-
-
-
-
 }
