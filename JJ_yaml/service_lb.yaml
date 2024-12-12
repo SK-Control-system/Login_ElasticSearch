@@ -1,9 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: live-control-internal-service-lb
+  name: live-control-external-service-lb  # 이름을 external로 변경
   labels:
     app: live-control-spring
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"  # external LB를 위한 annotation
 spec:
   type: LoadBalancer
   selector:
