@@ -1,8 +1,8 @@
 elasticsearch:
   hosts:
-    - "172.20.27.105:9200"  # elasticsearch-cs
-    - "172.20.3.143:9200"   # elasticsearch-data1-cs
-    - "172.20.251.27:9200"   # elasticsearch-data2-cs
+    - "elasticsearch-cs:9200"  # elasticsearch-cs
+    - "elasticsearch-data1-cs:9200"   # elasticsearch-data1-cs
+    - "elasticsearch-data2-cs:9200"   # elasticsearch-data2-cs
     - "elasticsearch-lb:9200"  # elasticsearch-lb
   socketTimeout: 60000
   connectionTimeout: 5000
