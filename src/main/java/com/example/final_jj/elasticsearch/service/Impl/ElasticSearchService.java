@@ -301,6 +301,20 @@ public class ElasticSearchService {
         -> DB에 저장
         -> 위 함수들처럼 각각의 필트 데이터들 뿌려주기
      */
+
+    public List<Map<String, Object>> subScribeGetVideoId(String index, String queryJson) {
+        List<Map<String, Object>> results = searchSourceDocuments(index, queryJson);
+
+        // videoId 처리 로직 추가 (_source 바로 아래에 있는 videoId를 videoData.videoId로 이동)
+        for (Map<String, Object> source : results) {
+            if (source.containsKey("videoId")) {
+                source.put("videoData.videoId", source.get("videoId"));
+            }
+        }
+
+        return results;
+    }
+
     public List<String> getChannelIdByUserId(long userId) {
         List<String> channelIds = subscribeRepository.findChannelIdsByUserId(userId);
         return channelIds;
@@ -324,7 +338,7 @@ public class ElasticSearchService {
 
 
         // 채널 아이디로 비디오 데이터 검색
-        List<Map<String, Object>> searchList = searchSourceDocuments(index, searchSourceQuery);
+        List<Map<String, Object>> searchList = subScribeGetVideoId(index, searchSourceQuery);
         List<String> videoIds = findValue("videoId", searchList);
 
         // 비디오 아이디 리스트를 저장하고 반환
