@@ -15,4 +15,7 @@ public class VideoIdEntity {
 
     @Column(name = "videoid")
     private String videoId;
+
+    @Column(name = "categoryid", nullable = false)
+    private String categoryId;
 }

@@ -14,5 +14,8 @@ public class VideoData {
     public static class VideoItem {
         @JsonProperty("videoId")
         private String videoId;
+
+        @JsonProperty("categoryId")
+        private String categoryId;
     }
 }

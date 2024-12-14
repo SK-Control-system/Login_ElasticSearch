@@ -4,6 +4,7 @@ import com.example.final_jj.kafka.entity.VideoIdEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -15,6 +16,12 @@ public interface VideoRepository extends JpaRepository<VideoIdEntity, Long> {
     @Modifying
     @Query(value = "DELETE FROM VideoIdEntity v WHERE v.videoId NOT IN :videoIds")
     void deleteNotInVideoIds(List<String> videoIds);
+
+    @Modifying
+    @Query(value = "DELETE FROM VideoIdEntity v WHERE v.videoId NOT IN :videoIds AND v.categoryId = :categoryId")
+    void deleteNotInVideoIdsByCategory(@Param("videoIds") List<String> videoIds, @Param("categoryId") String categoryId);
+
+
 
 }
 
