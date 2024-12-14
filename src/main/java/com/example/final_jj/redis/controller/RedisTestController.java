@@ -42,4 +42,10 @@ public class RedisTestController {
         List<String> videoData = redisService.getVideoIdHashFromRedis();
         return videoData;
     }
+
+    @GetMapping("/get/hash/sub/channelId")
+    public List<String> getChannelIdHashFromRedis(@RequestParam Long userId) throws JsonProcessingException {
+        List<String> channelData = redisService.getSubChannelIdFromRedis(userId);
+        return channelData;
+    }
 }

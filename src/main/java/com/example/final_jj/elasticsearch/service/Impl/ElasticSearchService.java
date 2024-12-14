@@ -302,6 +302,7 @@ public class ElasticSearchService {
         -> 위 함수들처럼 각각의 필트 데이터들 뿌려주기
      */
 
+    // 여차하면 getVideoIdsByChannelId 메서드에서 searchSourceDocuments -> subScribeGetVideoId
     public List<Map<String, Object>> subScribeGetVideoId(String index, String queryJson) {
         List<Map<String, Object>> results = searchSourceDocuments(index, queryJson);
 
@@ -336,9 +337,9 @@ public class ElasticSearchService {
                 + "  \"size\": 10000"
                 + "}";
 
-
         // 채널 아이디로 비디오 데이터 검색
-        List<Map<String, Object>> searchList = subScribeGetVideoId(index, searchSourceQuery);
+        // Todo. 쿼리 한 번 더 날려서 비디오 아이디별로 썸네일이나 시작시간 등등 추가로 받아와서 최종적으로 프론트로 리턴해주기.
+        List<Map<String, Object>> searchList = searchSourceDocuments(index, searchSourceQuery);
         List<String> videoIds = findValue("videoId", searchList);
 
         // 비디오 아이디 리스트를 저장하고 반환
@@ -361,23 +362,6 @@ public class ElasticSearchService {
     public Map<String, List<String>> saveReportDataByVideoId(String index, String queryJson) {
         // Elasticsearch에서 데이터를 검색
         List<Map<String, Object>> filteredResults = searchDocuments(index, queryJson);
-
-        // ReportEntity로 변환하여 저장
-        List<ReportEntity> reports = new ArrayList<>();
-        for (Map<String, Object> data : filteredResults) {
-            ReportEntity report = new ReportEntity();
-            report.setVideoId(getFieldValue("videoData.videoId", data));
-            report.setConcurrentviewers(getFieldValue("videoData.concurrentViewers", data));
-            report.setLikecount(getFieldValue("videoData.likeCount", data));
-            report.setVideotitle(getFieldValue("videoData.videoTitle", data));
-            report.setActualstarttime(getFieldValue("videoData.actualStartTime", data)); // String으로 직접 저장
-            report.setChannelId(getFieldValue("videoData.channelId", data));
-            report.setChanneltitle(getFieldValue("videoData.channelTitle", data));
-            reports.add(report);
-        }
-
-        // 데이터 저장
-        reportRepository.saveAll(reports);
 
         // 필터링된 데이터를 Map으로 반환
         Map<String, List<String>> filteredData = new HashMap<>();
