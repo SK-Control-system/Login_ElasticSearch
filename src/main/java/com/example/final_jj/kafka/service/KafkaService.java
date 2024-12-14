@@ -100,4 +100,5 @@ public class KafkaService {
             log.error("카프카 메시지 처리 중 에러 발생: ", e);
         }
     }
+
 }
