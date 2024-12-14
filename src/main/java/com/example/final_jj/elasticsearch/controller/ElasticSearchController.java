@@ -73,7 +73,7 @@ public class ElasticSearchController {
         }
     }
 
-    @PostMapping("/video/search/searchConcurrentViewersWithTime")
+    @PostMapping("/video/search/concurrentViewersWithTime")
     public ResponseEntity<?> searchConcurrentViewersWithTime(@RequestParam String index, @RequestParam String videoid) {
         try {
             List<String> ConcurrentViewersWithTime = elasticSearchService.searchConcurrentViewersWithTime(index, videoid);
