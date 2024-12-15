@@ -37,7 +37,7 @@ public class KafkaService {
             // 카테고리별로 비디오 ID 그룹화
             Map<String, List<String>> categoryVideoIds = videoData.getItems().stream()
                     .collect(Collectors.groupingBy(
-                            VideoData.VideoItem::getCategoryId, // 카테고리 ID 기준으로 그룹화
+                            VideoData.VideoItem::getCategory, // 카테고리 이름 기준으로 그룹화
                             Collectors.mapping(VideoData.VideoItem::getVideoId, Collectors.toList())
                     ));
 
@@ -47,51 +47,51 @@ public class KafkaService {
 
             // 카테고리별로 기존 데이터를 그룹화
             Map<String, List<VideoIdEntity>> existingEntitiesByCategory = existingEntities.stream()
-                    .collect(Collectors.groupingBy(VideoIdEntity::getCategoryId));
+                    .collect(Collectors.groupingBy(VideoIdEntity::getCategory));
             log.info("카테고리별 기존 데이터 그룹화: {}", existingEntitiesByCategory);
 
             // 카테고리별 데이터 처리
             for (Map.Entry<String, List<String>> entry : categoryVideoIds.entrySet()) {
-                String categoryId = entry.getKey();
+                String category = entry.getKey();
                 List<String> newVideoIds = entry.getValue();
-                log.info("처리 중인 카테고리: {}, 새로 들어온 비디오 ID: {}", categoryId, newVideoIds);
+                log.info("처리 중인 카테고리: {}, 새로 들어온 비디오 ID: {}", category, newVideoIds);
 
                 // 현재 카테고리의 기존 비디오 ID
-                List<String> existingVideoIds = existingEntitiesByCategory.getOrDefault(categoryId, Collections.emptyList())
+                List<String> existingVideoIds = existingEntitiesByCategory.getOrDefault(category, Collections.emptyList())
                         .stream()
                         .map(VideoIdEntity::getVideoId)
                         .collect(Collectors.toList());
-                log.info("[{}] 기존 비디오 ID: {}", categoryId, existingVideoIds);
+                log.info("[{}] 기존 비디오 ID: {}", category, existingVideoIds);
 
                 // 새로 들어온 데이터 중 기존에 없는 데이터 필터링
                 List<String> newEntries = newVideoIds.stream()
                         .filter(id -> !existingVideoIds.contains(id)) // 기존에 없는 데이터만
                         .limit(5 - existingVideoIds.size()) // 최대 5개까지만 추가
                         .collect(Collectors.toList());
-                log.info("[{}] 추가할 새 비디오 ID: {}", categoryId, newEntries);
+                log.info("[{}] 추가할 새 비디오 ID: {}", category, newEntries);
 
                 // 새로운 데이터 추가
                 newEntries.forEach(videoId -> {
                     VideoIdEntity videoEntity = new VideoIdEntity();
                     videoEntity.setVideoId(videoId);
-                    videoEntity.setCategoryId(categoryId); // 카테고리 ID 설정
+                    videoEntity.setCategory(category); // 카테고리 ID 설정
                     videoRepository.save(videoEntity);
-                    log.info("[{}] 새로 추가된 비디오 ID: {}", categoryId, videoId);
+                    log.info("[{}] 새로 추가된 비디오 ID: {}", category, videoId);
                 });
 
                 // 유지할 비디오 ID 목록 생성
                 List<String> updatedVideoIds = existingVideoIds.stream()
                         .filter(newVideoIds::contains) // 새로 들어온 데이터 중 기존 데이터 유지
                         .collect(Collectors.toList());
-                log.info("[{}] 유지할 비디오 ID: {}", categoryId, updatedVideoIds);
+                log.info("[{}] 유지할 비디오 ID: {}", category, updatedVideoIds);
 
                 // 추가된 데이터 포함하여 최종 목록
                 updatedVideoIds.addAll(newEntries);
-                log.info("[{}] 최종 비디오 ID 목록: {}", categoryId, updatedVideoIds);
+                log.info("[{}] 최종 비디오 ID 목록: {}", category, updatedVideoIds);
 
                 // 기존 데이터 중 유지할 데이터 제외하고 삭제
-                videoRepository.deleteNotInVideoIdsByCategory(updatedVideoIds, categoryId);
-                log.info("[{}] 삭제 완료: 유지할 비디오 ID 외 모든 데이터 삭제", categoryId);
+                videoRepository.deleteNotInVideoIdsByCategory(updatedVideoIds, category);
+                log.info("[{}] 삭제 완료: 유지할 비디오 ID 외 모든 데이터 삭제", category);
             }
 
             log.info("모든 카테고리의 데이터 처리 완료");

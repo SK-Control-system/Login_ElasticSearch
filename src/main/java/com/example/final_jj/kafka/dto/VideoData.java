@@ -15,7 +15,7 @@ public class VideoData {
         @JsonProperty("videoId")
         private String videoId;
 
-        @JsonProperty("categoryId")
-        private String categoryId;
+        @JsonProperty("category")
+        private String category;
     }
 }
