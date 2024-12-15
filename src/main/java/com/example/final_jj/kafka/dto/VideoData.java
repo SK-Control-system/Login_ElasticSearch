@@ -17,5 +17,9 @@ public class VideoData {
 
         @JsonProperty("category")
         private String category;
+
+        @JsonProperty("videoTitle")
+        private String videoTitle; // 추가된 필드
+
     }
 }

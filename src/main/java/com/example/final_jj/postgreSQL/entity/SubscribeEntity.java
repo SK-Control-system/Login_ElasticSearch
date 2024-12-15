@@ -9,17 +9,18 @@ import java.time.LocalDateTime;
 @Table(name = "subscribe")
 @Data
 public class SubscribeEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long subId; // 구독 ID (Primary Key)
+    @Column(name = "sub_id") // 컬럼명 명시
+    private Long subId;
 
-    @Column(nullable = false)
-    private Long userId; // 사용자 ID (Foreign Key가 아닌 값)
+    @Column(name = "user_id", nullable = false) // 컬럼명 명시
+    private Long userId;
 
-    @Column(length = 500)
-    private String channelId; // 채널 ID
+    @Column(name = "channel_id", length = 500) // 컬럼명 명시
+    private String channelId;
 
-    @Column(nullable = false)
-    private LocalDateTime subAt; // 구독 시간
-
+    @Column(name = "sub_at", nullable = false) // 컬럼명 명시
+    private LocalDateTime subAt;
 }
