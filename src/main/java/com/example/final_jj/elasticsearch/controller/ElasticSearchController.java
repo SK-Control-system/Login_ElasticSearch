@@ -121,4 +121,14 @@ public class ElasticSearchController {
         Map<String, List<String>> reportData = elasticSearchService.saveReportDataByVideoId(index, queryJson);
         return ResponseEntity.ok(reportData);
     }
+
+    @GetMapping("/statistics/monthly")
+    public ResponseEntity<Map<String, Object>> getMonthlyStatisticsByChannel(
+            @RequestParam String index,
+            @RequestParam String channelId,
+            @RequestParam String month) {
+        Map<String, Object> statistics = elasticSearchService.getMonthlyStatisticsByChannel(index, channelId, month);
+        return ResponseEntity.ok(statistics);
+    }
+
 }
