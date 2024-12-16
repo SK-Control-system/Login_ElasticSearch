@@ -16,6 +16,10 @@ public interface VideoRepository extends JpaRepository<VideoIdEntity, Long> {
     @Query(value = "DELETE FROM VideoIdEntity v WHERE v.videoId NOT IN :videoIds")
     void deleteNotInVideoIds(List<String> videoIds);
 
+    @Modifying
+    @Query("DELETE FROM VideoIdEntity")
+    void deleteAllData();
+
 }
 
 
