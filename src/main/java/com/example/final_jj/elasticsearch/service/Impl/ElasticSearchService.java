@@ -476,6 +476,4 @@ public class ElasticSearchService {
                 + "  }"
                 + "}";
     }
-
-
 }

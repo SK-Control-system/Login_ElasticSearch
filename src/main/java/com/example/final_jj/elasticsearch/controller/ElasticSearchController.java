@@ -153,7 +153,7 @@ public class ElasticSearchController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/api/statistics/monthly")
+    @GetMapping("/statistics/monthly")
     public ResponseEntity<Map<String, Object>> getMonthlyStatisticsByChannel(
             @RequestParam String index,
             @RequestParam String channelId,
