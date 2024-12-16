@@ -130,5 +130,4 @@ public class ElasticSearchController {
         Map<String, Object> statistics = elasticSearchService.getMonthlyStatisticsByChannel(index, channelId, month);
         return ResponseEntity.ok(statistics);
     }
-
 }
