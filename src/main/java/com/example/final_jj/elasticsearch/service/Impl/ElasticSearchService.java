@@ -413,14 +413,14 @@ public class ElasticSearchService {
         // 월 누적 방송 횟수
         int totalBroadcasts = videoIds.size();
 
-        // 비디오 ID별 조회수 추이 (videoId와 viewCount 매핑)
+        // videoTitle별 조회수 추이 (videoId와 viewCount 매핑)
         Map<String, Integer> videoViewTrends = new HashMap<>();
         for (Map<String, Object> data : searchResults) {
-            String videoId = getFieldValue("videoData.videoId", data);
+            String videoTitle = getFieldValue("videoData.videoTitle", data);
             String viewCountStr = getFieldValue("videoData.viewCount", data);
-            if (videoId != null && viewCountStr != null) {
+            if (videoTitle != null && viewCountStr != null) {
                 int viewCount = Integer.parseInt(viewCountStr);
-                videoViewTrends.put(videoId, viewCount);
+                videoViewTrends.put(videoTitle, viewCount);
             }
         }
 
