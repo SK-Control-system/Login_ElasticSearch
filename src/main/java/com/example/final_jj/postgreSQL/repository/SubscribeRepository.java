@@ -13,4 +13,7 @@ public interface SubscribeRepository extends JpaRepository<SubscribeEntity, Long
 
     @Query("SELECT s.channelId FROM SubscribeEntity s WHERE s.userId = :userId")
     List<String> findChannelIdsByUserId(Long userId);
+
+    @Query("SELECT s.channelId FROM SubscribeEntity s")
+    List<String> findAllChannelIds();
 }

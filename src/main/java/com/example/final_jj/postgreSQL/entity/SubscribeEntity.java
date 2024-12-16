@@ -13,10 +13,10 @@ public class SubscribeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long subId; // 구독 ID (Primary Key)
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private Long userId; // 사용자 ID (Foreign Key가 아닌 값)
 
-    @Column(length = 500)
+    @Column(name = "channel_id", length = 500)
     private String channelId; // 채널 ID
 
     @Column(nullable = false)
