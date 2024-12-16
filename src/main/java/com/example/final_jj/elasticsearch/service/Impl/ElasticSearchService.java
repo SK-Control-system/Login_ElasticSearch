@@ -381,4 +381,101 @@ public class ElasticSearchService {
         }
         return values;
     }
+
+    public Map<String, Object> getMonthlyStatisticsByChannel(String index, String channelId, String month) {
+        Map<String, Object> result = new HashMap<>();
+
+        // Elasticsearch 쿼리 생성
+        String query = buildMonthlyQuery(channelId, month);
+
+        // Elasticsearch에서 데이터 검색
+        List<Map<String, Object>> searchResults = searchDocuments(index, query);
+
+        // 데이터 필드 추출
+        List<String> viewCounts = extractFieldValues("videoData.viewCount", searchResults);
+        List<String> likeCounts = extractFieldValues("videoData.likeCount", searchResults);
+        List<String> videoIds = extractFieldValues("videoData.videoId", searchResults);
+
+        /*
+        averageViewCount : 해당 월의 모든 비디오들의 평균 조회수
+        averageLikeCount : 해당 월의 모든 비디오들의 평균 좋아요 수
+        totalBroadcasts : 해당 월의 총 방송 횟수
+        videoViewTrends : 비디오 아이디별 조회수
+         */
+
+        // 평균 조회수 계산
+        double avgViewCount = viewCounts.stream()
+                .mapToInt(Integer::parseInt)
+                .average()
+                .orElse(0.0);
+
+        // 평균 좋아요 수 계산
+        double avgLikeCount = likeCounts.stream()
+                .mapToInt(Integer::parseInt)
+                .average()
+                .orElse(0.0);
+
+        // 월 누적 방송 횟수
+        int totalBroadcasts = videoIds.size();
+
+        // 비디오 ID별 조회수 추이 (videoId와 viewCount 매핑)
+        Map<String, Integer> videoViewTrends = new HashMap<>();
+        for (Map<String, Object> data : searchResults) {
+            String videoId = getFieldValue("videoData.videoId", data);
+            String viewCountStr = getFieldValue("videoData.viewCount", data);
+            if (videoId != null && viewCountStr != null) {
+                int viewCount = Integer.parseInt(viewCountStr);
+                videoViewTrends.put(videoId, viewCount);
+            }
+        }
+
+        // 결과 데이터 매핑
+        result.put("averageViewCount", avgViewCount);
+        result.put("averageLikeCount", avgLikeCount);
+        result.put("totalBroadcasts", totalBroadcasts);
+        result.put("videoViewTrends", videoViewTrends);
+
+        return result;
+    }
+
+    public String buildMonthlyQuery(String channelId, String month) {
+        // 시작일 계산: "YYYY-MM-01T00:00:00"
+        String startDate = month + "-01T00:00:00";
+
+        // 종료일 계산: 다음 달 첫날
+        String[] yearMonth = month.split("-");
+        int year = Integer.parseInt(yearMonth[0]);
+        int monthValue = Integer.parseInt(yearMonth[1]);
+        monthValue++;
+        if (monthValue > 12) { // 다음 해로 넘어가는 경우
+            monthValue = 1;
+            year++;
+        }
+        String endDate = String.format("%d-%02d-01T00:00:00", year, monthValue);
+
+        // Elasticsearch 쿼리 생성
+        return "{"
+                + "  \"query\": {"
+                + "    \"bool\": {"
+                + "      \"must\": ["
+                + "        {"
+                + "          \"term\": {"
+                + "            \"videoData.channelId\": \"" + channelId + "\""
+                + "          }"
+                + "        },"
+                + "        {"
+                + "          \"range\": {"
+                + "            \"videoData.videoAPIReceivedTime\": {"
+                + "              \"gte\": \"" + startDate + "\","
+                + "              \"lt\": \"" + endDate + "\""
+                + "            }"
+                + "          }"
+                + "        }"
+                + "      ]"
+                + "    }"
+                + "  }"
+                + "}";
+    }
+
+
 }
