@@ -323,8 +323,6 @@ public class ElasticSearchService {
 
 
     public List<String> getVideoIdsByChannelId(String index, String channelid) {
-        List<String> videoIdList = new ArrayList<>();
-
         String searchSourceQuery = "{"
                 + "  \"query\": {"
                 + "    \"term\": {"
@@ -332,31 +330,15 @@ public class ElasticSearchService {
                 + "        \"value\": \"" + channelid + "\""
                 + "      }"
                 + "    }"
-                + "  }"
-                + "},"
+                + "  },"
                 + "  \"size\": 10000"
                 + "}";
 
         // 채널 아이디로 비디오 데이터 검색
-        // Todo. 쿼리 한 번 더 날려서 비디오 아이디별로 썸네일이나 시작시간 등등 추가로 받아와서 최종적으로 프론트로 리턴해주기.
         List<Map<String, Object>> searchList = searchSourceDocuments(index, searchSourceQuery);
         List<String> videoIds = findValue("videoId", searchList);
 
-        // 비디오 아이디 리스트를 저장하고 반환
-        List<ReportEntity> reports = videoIds.stream()
-                .map(videoId -> {
-                    ReportEntity report = new ReportEntity();
-                    report.setVideoId(videoId);
-                    report.setChannelId(channelid);
-                    return report;
-                })
-                .collect(Collectors.toList());
-
-        reportRepository.saveAll(reports);
-
-        videoIdList = reportRepository.findDistinctVideoIds();
-
-        return videoIdList;
+        return videoIds;
     }
 
     public Map<String, List<String>> saveReportDataByVideoId(String index, String queryJson) {
