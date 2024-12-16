@@ -1,14 +1,17 @@
 package com.example.final_jj.kafka.service;
 
 import com.example.final_jj.kafka.dto.VideoData;
-import com.example.final_jj.kafka.entity.VideoIdEntity;
-import com.example.final_jj.kafka.repository.VideoRepository;
+import com.example.final_jj.kafka.entity.*;
+import com.example.final_jj.kafka.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,6 +21,17 @@ public class KafkaService {
 
     private final ObjectMapper objectMapper;
     private final VideoRepository videoRepository;
+
+    @Autowired
+    private LolRepository lolRepository;
+    @Autowired
+    private MapleRepository mapleRepository;
+    @Autowired
+    private BattlegroundRepository battlegroundRepository;
+    @Autowired
+    private PoliticsRepository politicsRepository;
+    @Autowired
+    private MusicRepository musicRepository;
 
     public KafkaService(ObjectMapper objectMapper, VideoRepository videoRepository) {
         this.objectMapper = objectMapper;
@@ -31,69 +45,79 @@ public class KafkaService {
             // Kafka 메시지 파싱
             VideoData videoData = objectMapper.readValue(message, VideoData.class);
 
-            // 새로운 videoId 추출
+            // 카테고리와 새로운 videoId 추출
+            String category = videoData.getCategory();
             List<String> newVideoIds = videoData.getItems().stream()
                     .map(VideoData.VideoItem::getVideoId)
                     .distinct()
+                    .limit(25) // 최대 25개 제한
                     .collect(Collectors.toList());
 
-            // 기존 테이블의 videoId 가져오기
-            List<String> existingVideoIds = videoRepository.findAll().stream()
-                    .map(VideoIdEntity::getVideoId)
-                    .collect(Collectors.toList());
+            log.info("카테고리: {}, 새로운 데이터: {}", category, newVideoIds);
 
-            // 현재 테이블의 데이터 개수 확인
-            int existingCount = existingVideoIds.size();
-            log.info("현재 데이터 개수: {}개 @@@", existingCount);
-
-            // 조건: 테이블 데이터가 25개 미만이면 삭제 없이 새로운 데이터 추가만 수행
-            if (existingCount < 25) {
-                // 새로 들어온 데이터 중 기존에 없는 데이터만 필터링
-                List<String> newEntries = newVideoIds.stream()
-                        .filter(id -> !existingVideoIds.contains(id))
-                        .limit(25 - existingCount) // 남은 공간만큼만 추가
-                        .collect(Collectors.toList());
-
-                // 새로운 데이터 추가
-                newEntries.forEach(videoId -> {
-                    VideoIdEntity videoEntity = new VideoIdEntity();
-                    videoEntity.setVideoId(videoId);
-                    videoRepository.save(videoEntity);
-                });
-
-                log.info("초기 데이터 채우기: {}개 추가됨", newEntries.size());
-                return; // 여기서 종료, 삭제는 수행하지 않음
+            // 카테고리별로 처리
+            switch (category) {
+                case "정치":
+                    resetTableAndSaveData(politicsRepository, newVideoIds, PoliticsEntity.class);
+                    break;
+                case "리그오브레전드":
+                    resetTableAndSaveData(lolRepository, newVideoIds, LolEntity.class);
+                    break;
+                case "메이플스토리":
+                    resetTableAndSaveData(mapleRepository, newVideoIds, MapleEntity.class);
+                    break;
+                case "배틀그라운드":
+                    resetTableAndSaveData(battlegroundRepository, newVideoIds, BattlegroundEntity.class);
+                    break;
+                case "음악":
+                    resetTableAndSaveData(musicRepository, newVideoIds, MusicEntity.class);
+                    break;
+                default:
+                    log.warn("알 수 없는 카테고리: {}", category);
             }
 
-            // 유지할 videoId 목록 생성
-            List<String> updatedVideoIds = existingVideoIds.stream()
-                    .filter(newVideoIds::contains) // 중복된 항목 유지
-                    .collect(Collectors.toList());
-
-            // 빈자리 채울 새로운 데이터
-            List<String> newEntries = newVideoIds.stream()
-                    .filter(id -> !existingVideoIds.contains(id)) // 기존에 없는 데이터
-                    .limit(25 - updatedVideoIds.size()) // 25개 제한
-                    .collect(Collectors.toList());
-            log.info("대체되는 데이터: {}", newEntries);
-
-            // 최종 videoId 목록
-            updatedVideoIds.addAll(newEntries);
-
-            // 테이블 정리: 기존 데이터 중 유지할 목록 제외하고 삭제
-            videoRepository.deleteNotInVideoIds(updatedVideoIds);
-
-            // 새로운 데이터 추가
-            newEntries.forEach(videoId -> {
-                VideoIdEntity videoEntity = new VideoIdEntity();
-                videoEntity.setVideoId(videoId);
-                videoRepository.save(videoEntity);
-            });
-
-            log.info("VideoID 업데이트 : {}", updatedVideoIds);
 
         } catch (Exception e) {
-            log.error("카프카 에러 메시지 : ", e);
+            log.error("카프카 메시지 처리 중 에러 발생: ", e);
         }
+    }
+
+    private <T> void resetTableAndSaveData(JpaRepository<T, Long> repository, List<String> newVideoIds, Class<T> entityType) {
+        repository.deleteAll(); // 기존 데이터 삭제
+        newVideoIds.forEach(videoId -> {
+            try {
+                T entity = entityType.getDeclaredConstructor().newInstance();
+                entity.getClass().getMethod("setVideoId", String.class).invoke(entity, videoId);
+                repository.save(entity);
+            } catch (Exception e) {
+                throw new RuntimeException("데이터 삽입 실패", e);
+            }
+        });
+        log.info("테이블 초기화 및 데이터 삽입 완료");
+
+        // 통합 테이블 업데이트
+        updateAllVideosTable();
+    }
+
+    private void updateAllVideosTable() {
+        // 모든 카테고리 테이블에서 videoId를 가져오기
+        List<String> allVideoIds = new ArrayList<>();
+        allVideoIds.addAll(politicsRepository.findAll().stream().map(PoliticsEntity::getVideoId).collect(Collectors.toList()));
+        allVideoIds.addAll(lolRepository.findAll().stream().map(LolEntity::getVideoId).collect(Collectors.toList()));
+        allVideoIds.addAll(mapleRepository.findAll().stream().map(MapleEntity::getVideoId).collect(Collectors.toList()));
+        allVideoIds.addAll(battlegroundRepository.findAll().stream().map(BattlegroundEntity::getVideoId).collect(Collectors.toList()));
+        allVideoIds.addAll(musicRepository.findAll().stream().map(MusicEntity::getVideoId).collect(Collectors.toList()));
+
+        // 통합 테이블 초기화
+        videoRepository.deleteAllData();
+
+        // 통합 테이블에 새로운 videoId 저장
+        allVideoIds.stream().distinct().forEach(videoId -> {
+            VideoIdEntity entity = new VideoIdEntity();
+            entity.setVideoId(videoId);
+            videoRepository.save(entity);
+        });
+
+        log.info("통합 테이블 업데이트 완료: {}개", allVideoIds.size());
     }
 }
