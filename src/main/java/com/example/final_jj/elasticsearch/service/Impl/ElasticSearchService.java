@@ -4,9 +4,6 @@ import com.example.final_jj.elasticsearch.controller.ElasticSearchController;
 import com.example.final_jj.elasticsearch.enums.HttpMethodEnum;
 import com.example.final_jj.elasticsearch.factor.ElasticSearchClientFactory;
 import com.example.final_jj.elasticsearch.utils.common.ElasticExecutor;
-import com.example.final_jj.postgreSQL.entity.ReportEntity;
-import com.example.final_jj.postgreSQL.entity.VideoEntity;
-import com.example.final_jj.postgreSQL.repository.ReportRepository;
 import com.example.final_jj.postgreSQL.repository.SubscribeRepository;
 import com.example.final_jj.postgreSQL.repository.VideoIdRepository;
 import org.elasticsearch.client.RestClient;
@@ -33,8 +30,6 @@ public class ElasticSearchService {
     @Autowired
     private SubscribeRepository subscribeRepository;
 
-    @Autowired
-    private ReportRepository reportRepository;
     
     private static final Logger logger = LoggerFactory.getLogger(ElasticSearchController.class);
 
